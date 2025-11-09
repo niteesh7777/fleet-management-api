@@ -14,7 +14,7 @@ const contactSchema = new mongoose.Schema(
       type: String,
       trim: true,
       lowercase: true,
-      match: [/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Please enter a valid email address'],
+      match: [/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, 'Please enter a valid email address'],
     },
   },
   { _id: false }

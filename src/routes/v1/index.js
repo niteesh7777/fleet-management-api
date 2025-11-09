@@ -5,13 +5,16 @@ import driverRoutes from './driver.routes.js';
 import vehicleRoutes from './vehicle.routes.js';
 import tripRoutes from './trip.routes.js';
 import routeRoutes from './route.routes.js';
-import clientRoutes from './client.routes.js'
+import clientRoutes from './client.routes.js';
+import maintenanceRoutes from './maintenance.routes.js';
+import analyticsRoutes from './analytics.routes.js'
+
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  res.json({ message: 'v1 router is working' });
-});
+// router.get('/', (req, res) => {
+//   res.json({ message: 'v1 router is working' });
+// });
 
 router.use('/auth', authRouter);
 router.use('/profile', profileRoutes);
@@ -20,5 +23,7 @@ router.use('/vehicles', vehicleRoutes);
 router.use('/trips', tripRoutes);
 router.use('/routes', routeRoutes);
 router.use('/clients', clientRoutes);
+router.use('/maintenance', maintenanceRoutes);
+router.use('/analytics', analyticsRoutes);
 
 export default router;
