@@ -3,6 +3,7 @@ import authRouter from './auth.routes.js';
 import profileRoutes from './profile.routes.js';
 import driverRoutes from './driver.routes.js';
 import vehicleRoutes from './vehicle.routes.js';
+import tripRoutes from './trip.routes.js';
 
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.use('/auth', authRouter);
 router.use('/profile', profileRoutes);
 router.use('/drivers', driverRoutes);
 router.use('/vehicles', vehicleRoutes);
+router.use('/trips', tripRoutes);
 
 export default router;

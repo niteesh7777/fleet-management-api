@@ -99,7 +99,6 @@ const tripSchema = new mongoose.Schema(
 // ===============================
 
 // Indexes for dashboard queries
-tripSchema.index({ status: 1 });
 tripSchema.index({ startTime: 1, endTime: 1 });
 
 // Virtual populate
