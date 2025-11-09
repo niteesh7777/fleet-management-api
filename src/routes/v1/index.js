@@ -5,6 +5,7 @@ import driverRoutes from './driver.routes.js';
 import vehicleRoutes from './vehicle.routes.js';
 import tripRoutes from './trip.routes.js';
 import routeRoutes from './route.routes.js';
+import clientRoutes from './client.routes.js'
 
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.use('/drivers', driverRoutes);
 router.use('/vehicles', vehicleRoutes);
 router.use('/trips', tripRoutes);
 router.use('/routes', routeRoutes);
+router.use('/clients', clientRoutes);
 
 export default router;

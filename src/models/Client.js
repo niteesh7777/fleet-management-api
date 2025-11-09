@@ -77,7 +77,7 @@ clientSchema.virtual('trips', {
 });
 
 // Index for faster searching/filtering
-clientSchema.index({ name: 1 });
+// clientSchema.index({ name: 1 });
 clientSchema.index({ 'contact.phone': 1 });
 clientSchema.index({ gstNo: 1 });
 
