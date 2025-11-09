@@ -33,6 +33,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    refreshTokenJti: {
+      type: String,
+      select: false,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -59,7 +64,7 @@ userSchema.methods.toJSON = function () {
   return user;
 };
 
-userSchema.index({ email: 1 });
+userSchema.index({ refreshTokenJti: 1 });
 
 const User = mongoose.model('User', userSchema);
 export default User;
