@@ -84,7 +84,7 @@ const routeSchema = new mongoose.Schema(
 // ===============================
 
 routeSchema.index({ 'source.name': 1, 'destination.name': 1 });
-routeSchema.index({ name: 1 });
+// routeSchema.index({ name: 1 });
 
 // Virtual to quickly fetch trips using this route
 routeSchema.virtual('trips', {
