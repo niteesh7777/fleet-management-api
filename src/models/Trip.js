@@ -1,0 +1,152 @@
+// models/Trip.js
+import mongoose from 'mongoose';
+
+const progressUpdateSchema = new mongoose.Schema(
+  {
+    timestamp: { type: Date, default: Date.now },
+    location: {
+      lat: Number,
+      lng: Number,
+    },
+    note: { type: String, trim: true },
+    status: {
+      type: String,
+      enum: ['started', 'in-transit', 'delayed', 'arrived', 'completed'],
+      default: 'in-transit',
+    },
+  },
+  { _id: false }
+);
+
+const tripSchema = new mongoose.Schema(
+  {
+    tripCode: {
+      type: String,
+      required: true,
+      unique: true,
+      uppercase: true,
+      trim: true,
+    },
+
+    routeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Route',
+      required: true,
+    },
+
+    vehicleIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Vehicle',
+      },
+    ],
+
+    driverIds: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'DriverProfile',
+      },
+    ],
+
+    clientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Client',
+      required: true,
+    },
+
+    goodsInfo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    loadWeightKg: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    tripCost: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    startTime: Date,
+    endTime: Date,
+
+    status: {
+      type: String,
+      enum: ['scheduled', 'started', 'in-transit', 'completed', 'cancelled'],
+      default: 'scheduled',
+      index: true,
+    },
+
+    progressUpdates: [progressUpdateSchema],
+
+    remarks: {
+      type: String,
+      trim: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// ===============================
+// 🧩 Indexes & Virtuals
+// ===============================
+
+// Indexes for dashboard queries
+tripSchema.index({ status: 1 });
+tripSchema.index({ startTime: 1, endTime: 1 });
+
+// Virtual populate
+tripSchema.virtual('route', {
+  ref: 'Route',
+  localField: 'routeId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+tripSchema.virtual('vehicles', {
+  ref: 'Vehicle',
+  localField: 'vehicleIds',
+  foreignField: '_id',
+});
+
+tripSchema.virtual('drivers', {
+  ref: 'DriverProfile',
+  localField: 'driverIds',
+  foreignField: '_id',
+});
+
+tripSchema.virtual('client', {
+  ref: 'Client',
+  localField: 'clientId',
+  foreignField: '_id',
+  justOne: true,
+});
+
+// ===============================
+// 🧩 Utility Methods
+// ===============================
+
+// Add a progress update (with note/location)
+tripSchema.methods.addProgressUpdate = async function (updateData) {
+  this.progressUpdates.push(updateData);
+  await this.save();
+  return this;
+};
+
+// Mark trip completed
+tripSchema.methods.markCompleted = async function () {
+  this.status = 'completed';
+  this.endTime = new Date();
+  await this.save();
+  return this;
+};
+
+const Trip = mongoose.model('Trip', tripSchema);
+export default Trip;
