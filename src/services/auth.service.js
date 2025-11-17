@@ -1,4 +1,3 @@
-// src/services/auth.service.js
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
 import UserRepository from '../repositories/user.repository.js';
@@ -22,12 +21,10 @@ export default class AuthService {
     console.log(`login passward verification result: ${ok}`);
     if (!ok) throw new AppError('Invalid password', 400);
 
-    // create jti, rotate refresh token jti
     const jti = uuidv4();
     const accessToken = generateAccessToken(user); // embed minimal claims
     const refreshToken = generateRefreshToken(user, { jti }); // token utils should accept jti
 
-    // store jti in DB (single active session per user model)
     await repo.setRefreshTokenJti(user._id, jti);
 
     const safeUser = {
