@@ -1,4 +1,3 @@
-// models/MaintenanceLog.js
 import mongoose from 'mongoose';
 
 const maintenanceLogSchema = new mongoose.Schema(
@@ -83,14 +82,10 @@ const maintenanceLogSchema = new mongoose.Schema(
   }
 );
 
-// ===============================
-// 🧩 Indexes & Virtuals
-// ===============================
 
 maintenanceLogSchema.index({ serviceDate: -1 });
 maintenanceLogSchema.index({ nextDueDate: 1 });
 
-// Virtual populate to easily access vehicle details
 maintenanceLogSchema.virtual('vehicle', {
   ref: 'Vehicle',
   localField: 'vehicleId',

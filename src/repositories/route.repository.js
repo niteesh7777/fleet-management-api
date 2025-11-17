@@ -1,4 +1,3 @@
-// src/repositories/route.repository.js
 import Route from '../models/Route.js';
 
 export default class RouteRepository {

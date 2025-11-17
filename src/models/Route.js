@@ -1,4 +1,3 @@
-// models/Route.js
 import mongoose from 'mongoose';
 
 const waypointSchema = new mongoose.Schema(
@@ -65,7 +64,7 @@ const routeSchema = new mongoose.Schema(
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Admin who created
+      ref: 'User', 
       required: true,
     },
 
@@ -79,14 +78,8 @@ const routeSchema = new mongoose.Schema(
   }
 );
 
-// ===============================
-// 🧩 Indexes & Utility Virtuals
-// ===============================
-
 routeSchema.index({ 'source.name': 1, 'destination.name': 1 });
-// routeSchema.index({ name: 1 });
 
-// Virtual to quickly fetch trips using this route
 routeSchema.virtual('trips', {
   ref: 'Trip',
   localField: '_id',

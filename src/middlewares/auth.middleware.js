@@ -1,10 +1,10 @@
-// src/middlewares/auth.middleware.js
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
 import { config } from '../config/env.js';
-import UserRepository from '../repositories/user.repository.js';
+// import UserRepository from '../repositories/user.repository.js';
 
-const repo = new UserRepository();
+// const repo = new UserRepository();
+
 
 export const requireAuth = () => {
   return async (req, res, next) => {
@@ -18,9 +18,8 @@ export const requireAuth = () => {
       try {
         payload = jwt.verify(token, config.accessTokenSecret);
       } catch (err) {
-        console.log('err:',err)
+        console.log('err:', err);
         return next(new AppError('Invalid or expired access token', 401));
-
       }
 
       // Option 1: attach payload only (fast)

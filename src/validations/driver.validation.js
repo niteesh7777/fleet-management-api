@@ -1,4 +1,3 @@
-// src/validations/driver.validation.js
 import Joi from 'joi';
 
 // Reusable phone regex

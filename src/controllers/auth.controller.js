@@ -7,17 +7,14 @@ import { config } from '../config/env.js';
 const service = new AuthService();
 const COOKIE_NAME = 'refreshToken';
 
-// ✅ Shared cookie config
 const cookieOptions = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
   sameSite: 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  maxAge: 7 * 24 * 60 * 60 * 1000, 
 };
 
-// =========================================
-// REGISTER
-// =========================================
+
 export const register = async (req, res, next) => {
   try {
     const user = await service.register(req.body);
@@ -27,9 +24,7 @@ export const register = async (req, res, next) => {
   }
 };
 
-// =========================================
-// LOGIN
-// =========================================
+
 export const login = async (req, res, next) => {
   try {
     const { user, accessToken, refreshToken } = await service.login(req.body);
@@ -42,9 +37,8 @@ export const login = async (req, res, next) => {
   }
 };
 
-// =========================================
-// REFRESH TOKEN
-// =========================================
+
+
 export const refresh = async (req, res, next) => {
   try {
     const token = req.cookies[COOKIE_NAME];
@@ -61,9 +55,7 @@ export const refresh = async (req, res, next) => {
   }
 };
 
-// =========================================
-// LOGOUT
-// =========================================
+
 export const logout = async (req, res, next) => {
   try {
     const token = req.cookies[COOKIE_NAME];

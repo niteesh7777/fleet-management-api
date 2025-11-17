@@ -1,4 +1,3 @@
-// src/repositories/driver.repository.js
 import DriverProfile from '../models/DriverProfile.js';
 
 export default class DriverRepository {

@@ -1,4 +1,3 @@
-// src/routes/analytics.routes.js
 import express from 'express';
 import {
   getDashboardStats,

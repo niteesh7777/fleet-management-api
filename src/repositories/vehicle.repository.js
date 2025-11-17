@@ -1,4 +1,3 @@
-// src/repositories/vehicle.repository.js
 import Vehicle from '../models/Vehicle.js';
 
 export default class VehicleRepository {

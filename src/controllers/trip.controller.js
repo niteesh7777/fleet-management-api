@@ -1,13 +1,8 @@
-// src/controllers/trip.controller.js
 import TripService from '../services/trip.service.js';
 import { success } from '../utils/response.utils.js';
 
 const service = new TripService();
 
-/**
- * POST /api/trips
- * Create a new trip
- */
 export const createTrip = async (req, res, next) => {
   try {
     const trip = await service.createTrip(req.body);
@@ -17,10 +12,7 @@ export const createTrip = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/trips
- * List trips (optional query filters)
- */
+
 export const getAllTrips = async (req, res, next) => {
   try {
     // optionally accept filters via query params (e.g., ?status=started&clientId=...)
@@ -32,10 +24,7 @@ export const getAllTrips = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/trips/:id
- * Get single trip
- */
+
 export const getTripById = async (req, res, next) => {
   try {
     const trip = await service.getTripById(req.params.id);
@@ -45,10 +34,7 @@ export const getTripById = async (req, res, next) => {
   }
 };
 
-/**
- * PUT /api/trips/:id
- * Update trip
- */
+
 export const updateTrip = async (req, res, next) => {
   try {
     const trip = await service.updateTrip(req.params.id, req.body);
@@ -58,10 +44,8 @@ export const updateTrip = async (req, res, next) => {
   }
 };
 
-/**
- * DELETE /api/trips/:id
- * Delete trip
- */
+
+
 export const deleteTrip = async (req, res, next) => {
   try {
     const trip = await service.deleteTrip(req.params.id);
@@ -71,11 +55,7 @@ export const deleteTrip = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/trips/:id/progress
- * Add a progress update (location, note, status)
- * body: { location: { lat, lng }, note, status }
- */
+
 export const addProgressUpdate = async (req, res, next) => {
   try {
     const updateData = req.body;
@@ -86,10 +66,7 @@ export const addProgressUpdate = async (req, res, next) => {
   }
 };
 
-/**
- * POST /api/trips/:id/complete
- * Mark trip completed
- */
+
 export const completeTrip = async (req, res, next) => {
   try {
     const trip = await service.completeTrip(req.params.id);

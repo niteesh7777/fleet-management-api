@@ -10,11 +10,17 @@ const repo = new UserRepository();
 
 export default class AuthService {
   async login({ email, password }) {
+    console.log('login - input password:', password);
     const user = await repo.findByEmail(email);
-    if (!user) throw new AppError('Invalid email or password', 400);
+    console.log('checked user:', user);
+    if (!user) throw new AppError('Invalid email', 400);
+
+    console.log(`loginservice req.passward: ${password}`);
 
     const ok = await argon2.verify(user.passwordHash, password);
-    if (!ok) throw new AppError('Invalid email or password', 400);
+    //debuging
+    console.log(`login passward verification result: ${ok}`);
+    if (!ok) throw new AppError('Invalid password', 400);
 
     // create jti, rotate refresh token jti
     const jti = uuidv4();
@@ -35,12 +41,14 @@ export default class AuthService {
   }
 
   async register({ name, email, password, role }) {
+    console.log('Register - input password:', password);
     const existing = await repo.findByEmail(email);
     if (existing) throw new AppError('Email already registered', 400);
 
-    // hash explicitly here for clarity
     const passwordHash = await argon2.hash(password);
+    console.log('Register - generated hash:', passwordHash);
     const user = await repo.create({ name, email, passwordHash, role });
+    console.log('Register - user created:', user);
 
     return {
       id: user._id,

@@ -1,4 +1,3 @@
-// src/repositories/trip.repository.js
 import Trip from '../models/Trip.js';
 
 export default class TripRepository {

@@ -1,4 +1,3 @@
-// src/validations/trip.validation.js
 import Joi from 'joi';
 
 export const createTripSchema = Joi.object({

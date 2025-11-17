@@ -1,4 +1,3 @@
-// src/routes/client.routes.js
 import express from 'express';
 import { validate } from '../../middlewares/validation.middleware.js';
 import {

@@ -1,4 +1,3 @@
-// src/repositories/client.repository.js
 import Client from '../models/Client.js';
 
 export default class ClientRepository {

@@ -1,4 +1,3 @@
-// src/validations/route.validation.js
 import Joi from 'joi';
 
 const pointSchema = Joi.object({

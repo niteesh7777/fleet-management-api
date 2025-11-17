@@ -12,10 +12,6 @@ import analyticsRoutes from './analytics.routes.js'
 
 const router = express.Router();
 
-// router.get('/', (req, res) => {
-//   res.json({ message: 'v1 router is working' });
-// });
-
 router.use('/auth', authRouter);
 router.use('/profile', profileRoutes);
 router.use('/drivers', driverRoutes);

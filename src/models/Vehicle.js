@@ -1,4 +1,3 @@
-// models/Vehicle.js
 import mongoose from 'mongoose';
 
 const vehicleSchema = new mongoose.Schema(
@@ -73,11 +72,7 @@ const vehicleSchema = new mongoose.Schema(
   }
 );
 
-// ===============================
-// 🧩 Virtuals & Utility Methods
-// ===============================
 
-// Virtual populate (for trip and driver details)
 vehicleSchema.virtual('activeTrip', {
   ref: 'Trip',
   localField: 'currentTripId',
@@ -91,9 +86,6 @@ vehicleSchema.virtual('drivers', {
   foreignField: '_id',
 });
 
-// ===============================
-// 🧩 Custom Methods
-// ===============================
 
 // Check if insurance expired
 vehicleSchema.methods.isInsuranceExpired = function () {

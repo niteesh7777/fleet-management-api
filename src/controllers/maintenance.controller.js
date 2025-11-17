@@ -1,13 +1,8 @@
-// src/controllers/maintenance.controller.js
 import MaintenanceService from '../services/maintenance.service.js';
 import { success } from '../utils/response.utils.js';
 
 const service = new MaintenanceService();
 
-/**
- * @desc Create maintenance log
- * @route POST /api/maintenance
- */
 export const createMaintenance = async (req, res, next) => {
   try {
     const log = await service.createMaintenance(req.body);
@@ -17,10 +12,6 @@ export const createMaintenance = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Get all maintenance logs
- * @route GET /api/maintenance
- */
 export const getAllMaintenance = async (req, res, next) => {
   try {
     const logs = await service.getAllMaintenance();
@@ -30,10 +21,6 @@ export const getAllMaintenance = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Get single maintenance log by ID
- * @route GET /api/maintenance/:id
- */
 export const getMaintenanceById = async (req, res, next) => {
   try {
     const log = await service.getMaintenanceById(req.params.id);
@@ -43,10 +30,6 @@ export const getMaintenanceById = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Get logs by vehicle ID
- * @route GET /api/maintenance/vehicle/:vehicleId
- */
 export const getLogsByVehicle = async (req, res, next) => {
   try {
     const logs = await service.getLogsByVehicle(req.params.vehicleId);
@@ -56,10 +39,6 @@ export const getLogsByVehicle = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Update maintenance log
- * @route PUT /api/maintenance/:id
- */
 export const updateMaintenance = async (req, res, next) => {
   try {
     const log = await service.updateMaintenance(req.params.id, req.body);
@@ -69,10 +48,6 @@ export const updateMaintenance = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Delete maintenance log
- * @route DELETE /api/maintenance/:id
- */
 export const deleteMaintenance = async (req, res, next) => {
   try {
     const log = await service.deleteMaintenance(req.params.id);

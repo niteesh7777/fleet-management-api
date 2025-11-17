@@ -1,4 +1,3 @@
-// models/Trip.js
 import mongoose from 'mongoose';
 
 const progressUpdateSchema = new mongoose.Schema(
@@ -94,14 +93,9 @@ const tripSchema = new mongoose.Schema(
   }
 );
 
-// ===============================
-// 🧩 Indexes & Virtuals
-// ===============================
 
-// Indexes for dashboard queries
 tripSchema.index({ startTime: 1, endTime: 1 });
 
-// Virtual populate
 tripSchema.virtual('route', {
   ref: 'Route',
   localField: 'routeId',
@@ -128,9 +122,6 @@ tripSchema.virtual('client', {
   justOne: true,
 });
 
-// ===============================
-// 🧩 Utility Methods
-// ===============================
 
 // Add a progress update (with note/location)
 tripSchema.methods.addProgressUpdate = async function (updateData) {

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import { config } from './env.js';
+import { dbName } from '../constants.js';
 
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
@@ -10,7 +11,7 @@ async function connectDB() {
   let attempt = 0;
   while (!connected && attempt <= MAX_RETRIES) {
     try {
-      await mongoose.connect(config.mongoURI, {
+      await mongoose.connect(`${config.mongoURI}/${dbName}`, {
         autoIndex: false,
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,

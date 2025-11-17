@@ -1,4 +1,3 @@
-// src/validations/client.validation.js
 import Joi from 'joi';
 
 const contactSchema = Joi.object({

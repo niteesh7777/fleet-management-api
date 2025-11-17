@@ -1,4 +1,3 @@
-// src/validations/maintenance.validation.js
 import Joi from 'joi';
 
 export const createMaintenanceSchema = Joi.object({
@@ -17,7 +16,6 @@ export const createMaintenanceSchema = Joi.object({
     )
     .default('general-service'),
   description: Joi.string().trim().required(),
-  // <-- fixed: removed the string second-argument which Joi expects as an options object
   serviceDate: Joi.date().default(() => new Date()),
   cost: Joi.number().min(0).required(),
   nextDueDate: Joi.date().allow(null),

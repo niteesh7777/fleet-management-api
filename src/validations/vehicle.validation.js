@@ -1,4 +1,3 @@
-// src/validations/vehicle.validation.js
 import Joi from 'joi';
 
 export const createVehicleSchema = Joi.object({

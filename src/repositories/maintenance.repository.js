@@ -1,4 +1,3 @@
-// src/repositories/maintenance.repository.js
 import MaintenanceLog from '../models/MaintenanceLog.js';
 
 export default class MaintenanceRepository {
