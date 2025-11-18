@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import router from './routes/index.js';
 import errorHandler from './middlewares/error.middleware.js';
 import cookieParser from 'cookie-parser';
+import { frontendURL } from './constants.js';
 
 const app = express();
 
@@ -12,7 +13,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: frontendURL, // frunt end URL string
     credentials: true,
   })
 );
