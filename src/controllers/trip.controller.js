@@ -75,3 +75,12 @@ export const completeTrip = async (req, res, next) => {
     return next(err);
   }
 };
+
+export const getMyTrips = async (req, res, next) => {
+  try {
+    const trips = await service.getTripsForDriver(req.user.id);
+    return success(res, 'Trips fetched successfully', { trips });
+  } catch (err) {
+    next(err);
+  }
+};

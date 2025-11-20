@@ -124,4 +124,11 @@ export default class TripService {
 
     return trip;
   }
+
+  async getTripsForDriver(userId) {
+    const profile = await driverRepo.findOneByUserId(userId);
+    if (!profile) throw new AppError('Driver profile not found', 404);
+
+    return await tripRepo.find({ driverIds: profile._id }).populate('route client vehicles');
+  }
 }

@@ -73,3 +73,14 @@ export const checkInsurance = async (req, res, next) => {
     next(err);
   }
 };
+
+export const assignDriver = async (req, res, next) => {
+  try {
+    const { vehicleId, driverId } = req.params;
+    const result = await service.assignDriverToVehicle(vehicleId, driverId);
+
+    return success(res, 'Driver assigned to vehicle successfully', result);
+  } catch (err) {
+    next(err);
+  }
+};

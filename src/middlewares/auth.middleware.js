@@ -5,7 +5,6 @@ import { config } from '../config/env.js';
 
 // const repo = new UserRepository();
 
-
 export const requireAuth = () => {
   return async (req, res, next) => {
     try {
@@ -22,13 +21,7 @@ export const requireAuth = () => {
         return next(new AppError('Invalid or expired access token', 401));
       }
 
-      // Option 1: attach payload only (fast)
       req.user = { id: payload.id, role: payload.role };
-
-      // Option 2 (optional): fetch fresh user record if you need DB data
-      // const user = await repo.findById(payload.id);
-      // if (!user) return next(new AppError('User not found', 404));
-      // req.user = { id: user._id, role: user.role, name: user.name, email: user.email };
 
       next();
     } catch (err) {

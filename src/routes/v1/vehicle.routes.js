@@ -9,12 +9,16 @@ import {
   deleteVehicle,
   updateVehicleStatus,
   checkInsurance,
+  assignDriver,
 } from '../../controllers/vehicle.controller.js';
 import {
   createVehicleSchema,
   updateVehicleSchema,
   updateVehicleStatusSchema,
 } from '../../validations/vehicle.validation.js';
+
+import { requireRole } from '../../middlewares/role.middleware.js';
+import { requireAuth } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
@@ -31,5 +35,7 @@ router.delete('/:id', deleteVehicle);
 router.patch('/:id/status', validate(updateVehicleStatusSchema), updateVehicleStatus);
 
 router.get('/:id/insurance', checkInsurance);
+
+router.post('/:vehicleId/assign-driver/:driverId', requireAuth, requireRole('admin'), assignDriver);
 
 export default router;

@@ -29,4 +29,11 @@ export default class UserRepository {
   async setRefreshTokenJti(userId, jti) {
     return this.Model.findByIdAndUpdate(userId, { refreshTokenJti: jti }, { new: true });
   }
+
+  async update(id, updateData) {
+    return await this.Model.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+  }
 }

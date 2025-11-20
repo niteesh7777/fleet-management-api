@@ -44,14 +44,6 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// userSchema.pre('save', async function (next) {
-//   if (!this.isModified('passwordHash')) return next();
-//   try {
-//     this.passwordHash = await argon2.hash(this.passwordHash);
-//   } catch (err) {
-//     next(err);
-//   }
-// });
 
 userSchema.methods.verifyPassword = async function (plainPassword) {
   return await argon2.verify(this.passwordHash, plainPassword);

@@ -11,15 +11,20 @@ const required = [
   'REFRESH_TOKEN_EXPIRES_IN',
 ];
 
+const missing = [];
 for (const key of required) {
   if (!process.env[key]) {
-    console.error(`❌ Missing required env var: ${key}`);
-    process.exit(1);
+    missing.push(key);
   }
 }
 
+if (missing.length > 0) {
+  console.error(`❌ Missing required env vars: ${missing.join(', ')}`);
+  process.exit(1);
+}
+
 export const config = {
-  port: parseInt(process.env.PORT, 10) || 4001,
+  port: parseInt(process.env.PORT, 10) || 4000,
   mongoURI: process.env.MONGO_URI,
   accessTokenSecret: process.env.ACCESS_TOKEN_SECRET,
   refreshTokenSecret: process.env.REFRESH_TOKEN_SECRET,
