@@ -1,8 +1,10 @@
 import express from 'express';
 import { validate } from '../../middlewares/validation.middleware.js';
+import { pagination } from '../../middlewares/pagination.middleware.js';
 import {
   createTrip,
   getAllTrips,
+  getTripsPaginated,
   getTripById,
   updateTrip,
   deleteTrip,
@@ -20,20 +22,34 @@ import { requireAuth } from '../../middlewares/auth.middleware.js';
 
 const router = express.Router();
 
-router.post('/', validate(createTripSchema), createTrip);
+// Apply authentication to all routes
+router.use(requireAuth());
 
-router.get('/', getAllTrips);
+router.post('/', requireRole('admin'), validate(createTripSchema), createTrip);
 
-router.get('/:id', getTripById);
+router.get('/', requireRole('admin'), getAllTrips);
+router.get(
+  '/paginated',
+  requireRole('admin'),
+  pagination({ defaultLimit: 10, maxLimit: 100 }),
+  getTripsPaginated
+);
 
-router.put('/:id', validate(updateTripSchema), updateTrip);
+router.get('/:id', getTripById); // Drivers might need to see trip details
 
-router.delete('/:id', deleteTrip);
+router.put('/:id', requireRole('admin'), validate(updateTripSchema), updateTrip);
 
-router.post('/:id/progress', validate(progressUpdateSchema), addProgressUpdate);
+router.delete('/:id', requireRole('admin'), deleteTrip);
 
-router.post('/:id/complete', completeTrip);
+router.post(
+  '/:id/progress',
+  requireRole('driver', 'admin'),
+  validate(progressUpdateSchema),
+  addProgressUpdate
+);
 
-router.get('/my', requireAuth, requireRole('driver'), getMyTrips);
+router.post('/:id/complete', requireRole('driver', 'admin'), completeTrip);
+
+router.get('/my', requireRole('driver'), getMyTrips);
 
 export default router;

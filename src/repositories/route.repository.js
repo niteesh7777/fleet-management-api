@@ -12,6 +12,19 @@ export default class RouteRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+    const [routes, total] = await Promise.all([
+      Route.find(filter)
+        .populate('createdBy', 'name email role')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      Route.countDocuments(filter),
+    ]);
+
+    return { routes, total };
+  }
+
   async findById(id) {
     return await Route.findById(id).populate('createdBy', 'name email role');
   }

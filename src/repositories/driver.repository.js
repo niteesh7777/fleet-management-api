@@ -13,6 +13,21 @@ export default class DriverRepository {
       .populate('activeTripId', 'tripCode status');
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+    const [drivers, total] = await Promise.all([
+      DriverProfile.find(filter)
+        .populate('userId', 'name email role')
+        .populate('assignedVehicle', 'vehicleNo model type status')
+        .populate('activeTripId', 'tripCode status')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      DriverProfile.countDocuments(filter),
+    ]);
+
+    return { drivers, total };
+  }
+
   async findById(id) {
     return await DriverProfile.findById(id)
       .populate('userId', 'name email role')

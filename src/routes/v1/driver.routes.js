@@ -1,8 +1,10 @@
 import express from 'express';
 import { validate } from '../../middlewares/validation.middleware.js';
+import { pagination } from '../../middlewares/pagination.middleware.js';
 import {
   createDriverComposite,
   getAllDrivers,
+  getDriversPaginated,
   getDriverById,
   updateDriver,
   deleteDriver,
@@ -27,6 +29,13 @@ router.post(
 );
 
 router.get('/', requireAuth(), requireRole('admin'), getAllDrivers);
+router.get(
+  '/paginated',
+  requireAuth(),
+  requireRole('admin'),
+  pagination({ defaultLimit: 10, maxLimit: 100 }),
+  getDriversPaginated
+);
 router.get('/:id', requireAuth(), requireRole('admin'), getDriverById);
 router.put('/:id', requireAuth(), requireRole('admin'), validate(updateDriverSchema), updateDriver);
 router.delete('/:id', requireAuth(), requireRole('admin'), deleteDriver);

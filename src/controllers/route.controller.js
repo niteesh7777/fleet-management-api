@@ -1,6 +1,7 @@
 // src/controllers/route.controller.js
 import RouteService from '../services/route.service.js';
 import { success } from '../utils/response.utils.js';
+import { createPaginatedResponse } from '../middlewares/pagination.middleware.js';
 
 const service = new RouteService();
 
@@ -17,6 +18,34 @@ export const getAllRoutes = async (req, res, next) => {
   try {
     const routes = await service.getAllRoutes();
     return success(res, 'Routes fetched successfully', { routes });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getRoutesPaginated = async (req, res, next) => {
+  try {
+    const { page, limit, skip } = req.pagination;
+    const filter = {};
+
+    // Add search functionality
+    if (req.query.search) {
+      filter.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { 'source.city': { $regex: req.query.search, $options: 'i' } },
+        { 'destination.city': { $regex: req.query.search, $options: 'i' } },
+      ];
+    }
+
+    // Add status filter
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    const { routes, total } = await service.getRoutesPaginated(filter, { skip, limit });
+    const paginatedResponse = createPaginatedResponse(routes, total, page, limit);
+
+    return success(res, 'Routes fetched successfully', paginatedResponse);
   } catch (err) {
     next(err);
   }

@@ -2,6 +2,7 @@
 import DriverService from '../services/driver.service.js';
 import AdminService from '../services/admin.service.js';
 import { success } from '../utils/response.utils.js';
+import { createPaginatedResponse } from '../middlewares/pagination.middleware.js';
 
 const driverService = new DriverService();
 const adminService = new AdminService();
@@ -21,6 +22,33 @@ export const getAllDrivers = async (req, res, next) => {
   try {
     const drivers = await driverService.getAllDrivers();
     return success(res, 'Drivers fetched successfully', { drivers });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getDriversPaginated = async (req, res, next) => {
+  try {
+    const { page, limit, skip } = req.pagination;
+    const filter = {};
+
+    // Add search functionality
+    if (req.query.search) {
+      filter.$or = [
+        { licenseNo: { $regex: req.query.search, $options: 'i' } },
+        { 'contact.phone': { $regex: req.query.search, $options: 'i' } },
+      ];
+    }
+
+    // Add status filter
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    const { drivers, total } = await driverService.getDriversPaginated(filter, { skip, limit });
+    const paginatedResponse = createPaginatedResponse(drivers, total, page, limit);
+
+    return success(res, 'Drivers fetched successfully', paginatedResponse);
   } catch (err) {
     next(err);
   }

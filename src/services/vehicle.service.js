@@ -20,6 +20,10 @@ export default class VehicleService {
     return await repo.findAll(filter);
   }
 
+  async getVehiclesPaginated(filter = {}, paginationOptions = {}) {
+    return await repo.findAllPaginated(filter, paginationOptions);
+  }
+
   async getVehicleById(id) {
     const vehicle = await repo.findById(id);
     if (!vehicle) throw new AppError('Vehicle not found', 404);
@@ -79,4 +83,3 @@ export default class VehicleService {
     return { vehicle, driver };
   }
 }
-

@@ -13,3 +13,12 @@ export const createDriverComposite = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAllDrivers = async (req, res, next) => {
+  try {
+    const drivers = await service.getAllDrivers();
+    return success(res, 'Drivers retrieved successfully', { drivers });
+  } catch (err) {
+    next(err);
+  }
+};

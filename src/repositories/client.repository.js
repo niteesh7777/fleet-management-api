@@ -13,6 +13,22 @@ export default class ClientRepository {
     });
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+    const [clients, total] = await Promise.all([
+      Client.find(filter)
+        .populate({
+          path: 'trips',
+          select: 'tripCode status startTime endTime',
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      Client.countDocuments(filter),
+    ]);
+
+    return { clients, total };
+  }
+
   async findById(id) {
     return await Client.findById(id).populate({
       path: 'trips',

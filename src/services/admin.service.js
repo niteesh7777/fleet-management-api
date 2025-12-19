@@ -31,4 +31,8 @@ export default class AdminService {
 
     return { user, profile };
   }
+
+  async getAllDrivers() {
+    return await this.driverService.getAllDrivers();
+  }
 }

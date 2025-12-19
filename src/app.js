@@ -13,7 +13,7 @@ app.use(helmet());
 
 app.use(
   cors({
-    origin: frontendURL, // frunt end URL string
+    origin: frontendURL, 
     credentials: true,
   })
 );

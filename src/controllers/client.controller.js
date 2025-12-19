@@ -1,13 +1,10 @@
 // src/controllers/client.controller.js
 import ClientService from '../services/client.service.js';
 import { success } from '../utils/response.utils.js';
+import { createPaginatedResponse } from '../middlewares/pagination.middleware.js';
 
 const service = new ClientService();
 
-/**
- * @desc Create a new client
- * @route POST /api/clients
- */
 export const createClient = async (req, res, next) => {
   try {
     const client = await service.createClient(req.body);
@@ -17,10 +14,6 @@ export const createClient = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Get all clients
- * @route GET /api/clients
- */
 export const getAllClients = async (req, res, next) => {
   try {
     const clients = await service.getAllClients();
@@ -30,10 +23,34 @@ export const getAllClients = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Get single client by ID
- * @route GET /api/clients/:id
- */
+export const getClientsPaginated = async (req, res, next) => {
+  try {
+    const { page, limit, skip } = req.pagination;
+    const filter = {};
+
+    // Add search functionality
+    if (req.query.search) {
+      filter.$or = [
+        { name: { $regex: req.query.search, $options: 'i' } },
+        { code: { $regex: req.query.search, $options: 'i' } },
+        { 'contact.person': { $regex: req.query.search, $options: 'i' } },
+      ];
+    }
+
+    // Add status filter
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    const { clients, total } = await service.getClientsPaginated(filter, { skip, limit });
+    const paginatedResponse = createPaginatedResponse(clients, total, page, limit);
+
+    return success(res, 'Clients fetched successfully', paginatedResponse);
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const getClientById = async (req, res, next) => {
   try {
     const client = await service.getClientById(req.params.id);
@@ -43,10 +60,6 @@ export const getClientById = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Update client info
- * @route PUT /api/clients/:id
- */
 export const updateClient = async (req, res, next) => {
   try {
     const client = await service.updateClient(req.params.id, req.body);
@@ -56,10 +69,6 @@ export const updateClient = async (req, res, next) => {
   }
 };
 
-/**
- * @desc Delete a client
- * @route DELETE /api/clients/:id
- */
 export const deleteClient = async (req, res, next) => {
   try {
     const client = await service.deleteClient(req.params.id);

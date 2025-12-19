@@ -60,6 +60,10 @@ export default class TripService {
     return await tripRepo.findAll(filter);
   }
 
+  async getTripsPaginated(filter = {}, paginationOptions = {}) {
+    return await tripRepo.findAllPaginated(filter, paginationOptions);
+  }
+
   /**
    * Get single trip by ID
    */

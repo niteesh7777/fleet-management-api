@@ -16,7 +16,6 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       trim: true,
-
     },
     passwordHash: {
       type: String,
@@ -44,6 +43,16 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('passwordHash') || this.passwordHash.startsWith('$argon2')) return next();
+
+  try {
+    this.passwordHash = await argon2.hash(this.passwordHash);
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 
 userSchema.methods.verifyPassword = async function (plainPassword) {
   return await argon2.verify(this.passwordHash, plainPassword);

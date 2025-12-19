@@ -1,5 +1,6 @@
 import MaintenanceService from '../services/maintenance.service.js';
 import { success } from '../utils/response.utils.js';
+import { createPaginatedResponse } from '../middlewares/pagination.middleware.js';
 
 const service = new MaintenanceService();
 
@@ -16,6 +17,43 @@ export const getAllMaintenance = async (req, res, next) => {
   try {
     const logs = await service.getAllMaintenance();
     return success(res, 'Maintenance logs fetched successfully', { logs });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getMaintenancePaginated = async (req, res, next) => {
+  try {
+    const { page, limit, skip } = req.pagination;
+    const filter = {};
+
+    // Add search functionality
+    if (req.query.search) {
+      filter.$or = [
+        { description: { $regex: req.query.search, $options: 'i' } },
+        { serviceType: { $regex: req.query.search, $options: 'i' } },
+      ];
+    }
+
+    // Add status filter
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    // Add vehicle filter
+    if (req.query.vehicleId) {
+      filter.vehicleId = req.query.vehicleId;
+    }
+
+    // Add service type filter
+    if (req.query.serviceType) {
+      filter.serviceType = req.query.serviceType;
+    }
+
+    const { logs, total } = await service.getMaintenancePaginated(filter, { skip, limit });
+    const paginatedResponse = createPaginatedResponse(logs, total, page, limit);
+
+    return success(res, 'Maintenance logs fetched successfully', paginatedResponse);
   } catch (err) {
     next(err);
   }

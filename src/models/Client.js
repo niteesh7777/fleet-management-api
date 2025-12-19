@@ -64,19 +64,14 @@ const clientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ===============================
-// 🧩 Virtuals & Indexes
-// ===============================
 
-// Virtual: Get all trips of this client
 clientSchema.virtual('trips', {
   ref: 'Trip',
   localField: '_id',
   foreignField: 'clientId',
 });
 
-// Index for faster searching/filtering
-// clientSchema.index({ name: 1 });
+
 clientSchema.index({ 'contact.phone': 1 });
 clientSchema.index({ gstNo: 1 });
 

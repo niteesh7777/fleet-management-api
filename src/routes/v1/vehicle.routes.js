@@ -4,6 +4,7 @@ import { validate } from '../../middlewares/validation.middleware.js';
 import {
   createVehicle,
   getAllVehicles,
+  getVehiclesPaginated,
   getVehicleById,
   updateVehicle,
   deleteVehicle,
@@ -19,23 +20,39 @@ import {
 
 import { requireRole } from '../../middlewares/role.middleware.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
+import { pagination } from '../../middlewares/pagination.middleware.js';
 
 const router = express.Router();
 
-router.post('/', validate(createVehicleSchema), createVehicle);
+// Apply authentication to all routes
+router.use(requireAuth());
 
-router.get('/', getAllVehicles);
+router.post('/', requireRole('admin'), validate(createVehicleSchema), createVehicle);
 
-router.get('/:id', getVehicleById);
+router.get('/', requireRole('admin'), getAllVehicles);
 
-router.put('/:id', validate(updateVehicleSchema), updateVehicle);
+router.get(
+  '/paginated',
+  requireRole('admin'),
+  pagination({ defaultLimit: 10, maxLimit: 100 }),
+  getVehiclesPaginated
+);
 
-router.delete('/:id', deleteVehicle);
+router.get('/:id', getVehicleById); // Drivers might need to see vehicle details
 
-router.patch('/:id/status', validate(updateVehicleStatusSchema), updateVehicleStatus);
+router.put('/:id', requireRole('admin'), validate(updateVehicleSchema), updateVehicle);
+
+router.delete('/:id', requireRole('admin'), deleteVehicle);
+
+router.patch(
+  '/:id/status',
+  requireRole('driver', 'admin'),
+  validate(updateVehicleStatusSchema),
+  updateVehicleStatus
+);
 
 router.get('/:id/insurance', checkInsurance);
 
-router.post('/:vehicleId/assign-driver/:driverId', requireAuth, requireRole('admin'), assignDriver);
+router.post('/:vehicleId/assign-driver/:driverId', requireRole('admin'), assignDriver);
 
 export default router;

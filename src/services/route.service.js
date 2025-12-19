@@ -23,6 +23,10 @@ export default class RouteService {
     return await repo.findAll(filter);
   }
 
+  async getRoutesPaginated(filter = {}, paginationOptions = {}) {
+    return await repo.findAllPaginated(filter, paginationOptions);
+  }
+
   async getRouteById(id) {
     const route = await repo.findById(id);
     if (!route) throw new AppError('Route not found', 404);

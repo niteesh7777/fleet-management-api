@@ -12,6 +12,20 @@ export default class VehicleRepository {
       .populate('currentTripId', 'tripCode status');
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+    const [vehicles, total] = await Promise.all([
+      Vehicle.find(filter)
+        .populate('assignedDrivers', 'licenseNo status')
+        .populate('currentTripId', 'tripCode status')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      Vehicle.countDocuments(filter),
+    ]);
+
+    return { vehicles, total };
+  }
+
   async findById(id) {
     return await Vehicle.findById(id)
       .populate('assignedDrivers', 'licenseNo status')

@@ -13,6 +13,20 @@ export default class MaintenanceRepository {
       .sort({ serviceDate: -1 });
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { serviceDate: -1 } } = {}) {
+    const [maintenanceLogs, total] = await Promise.all([
+      MaintenanceLog.find(filter)
+        .populate('vehicleId', 'vehicleNo model type status')
+        .populate('createdBy', 'name email role')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      MaintenanceLog.countDocuments(filter),
+    ]);
+
+    return { maintenanceLogs, total };
+  }
+
   async findById(id) {
     return await MaintenanceLog.findById(id)
       .populate('vehicleId', 'vehicleNo model type status')

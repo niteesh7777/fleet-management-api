@@ -4,15 +4,28 @@ import UserRepository from '../repositories/user.repository.js';
 import AppError from '../utils/appError.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/token.utils.js';
 import { v4 as uuidv4 } from 'uuid';
+import { config } from '../config/env.js';
 
 const repo = new UserRepository();
 
 export default class AuthService {
   async login({ email, password }) {
+    console.log(`[DEBUG] Login attempt for email: ${email}`);
+
     const user = await repo.findByEmail(email);
+    console.log(`[DEBUG] User found by email: ${!!user}`);
+
     if (!user) throw new AppError('Invalid email', 400);
 
+    console.log(`[DEBUG] passwordHash exists on user: ${!!user.passwordHash}`);
+    if (user.passwordHash) {
+      console.log(`[DEBUG] passwordHash length: ${user.passwordHash.length}`);
+      console.log(`[DEBUG] passwordHash starts with: ${user.passwordHash.substring(0, 10)}...`);
+    }
+
     const ok = await argon2.verify(user.passwordHash, password);
+    console.log(`[DEBUG] argon2.verify result: ${ok}`);
+
     if (!ok) throw new AppError('Invalid password', 400);
 
     const jti = uuidv4();
@@ -35,8 +48,8 @@ export default class AuthService {
     const existing = await repo.findByEmail(email);
     if (existing) throw new AppError('Email already registered', 400);
 
-    const passwordHash = await argon2.hash(password);
-    const user = await repo.create({ name, email, passwordHash, role });
+    const hashedPassword = await argon2.hash(password);
+    const user = await repo.create({ name, email, passwordHash: hashedPassword, role });
 
     return {
       id: user._id,
@@ -53,7 +66,7 @@ export default class AuthService {
   async refresh(refreshToken) {
     let payload;
     try {
-      payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+      payload = jwt.verify(refreshToken, config.refreshTokenSecret); // ✅ Use config for consistency
     } catch (e) {
       throw new AppError('Invalid or expired refresh token', 403);
     }

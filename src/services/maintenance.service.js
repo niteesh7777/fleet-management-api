@@ -26,6 +26,10 @@ export default class MaintenanceService {
     return await repo.findAll(filter);
   }
 
+  async getMaintenancePaginated(filter = {}, paginationOptions = {}) {
+    return await repo.findAllPaginated(filter, paginationOptions);
+  }
+
   async getMaintenanceById(id) {
     const log = await repo.findById(id);
     if (!log) throw new AppError('Maintenance record not found', 404);

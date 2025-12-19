@@ -23,6 +23,10 @@ export default class ClientService {
     return await repo.findAll(filter);
   }
 
+  async getClientsPaginated(filter = {}, paginationOptions = {}) {
+    return await repo.findAllPaginated(filter, paginationOptions);
+  }
+
   async getClientById(id) {
     const client = await repo.findById(id);
     if (!client) throw new AppError('Client not found', 404);

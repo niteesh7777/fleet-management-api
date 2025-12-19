@@ -15,6 +15,22 @@ export default class TripRepository {
       .sort({ createdAt: -1 });
   }
 
+  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+    const [trips, total] = await Promise.all([
+      Trip.find(filter)
+        .populate('clientId', 'name type')
+        .populate('routeId', 'name source destination distanceKm')
+        .populate('vehicleIds', 'vehicleNo model type status')
+        .populate('driverIds', 'licenseNo status')
+        .sort(sort)
+        .skip(skip)
+        .limit(limit),
+      Trip.countDocuments(filter),
+    ]);
+
+    return { trips, total };
+  }
+
   async findById(id) {
     return await Trip.findById(id)
       .populate('clientId', 'name type')

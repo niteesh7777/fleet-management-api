@@ -1,7 +1,7 @@
 // src/services/driver.service.js
 import DriverRepository from '../repositories/driver.repository.js';
 import AppError from '../utils/appError.js';
-import UserRepository from '../repositories/user.repository.js'
+import UserRepository from '../repositories/user.repository.js';
 
 const repo = new DriverRepository();
 const userRepo = new UserRepository();
@@ -13,6 +13,10 @@ export default class DriverService {
 
   async getAllDrivers() {
     return await repo.findAll();
+  }
+
+  async getDriversPaginated(filter = {}, paginationOptions = {}) {
+    return await repo.findAllPaginated(filter, paginationOptions);
   }
 
   async getDriverById(id) {
@@ -45,6 +49,26 @@ export default class DriverService {
     driver.assignedVehicle = null;
     await driver.save();
 
+    return driver;
+  }
+
+  async updateLocation(driverId, location) {
+    const driver = await repo.findById(driverId);
+    if (!driver) throw new AppError('Driver not found', 404);
+
+    driver.currentLocation = {
+      lat: location.lat,
+      lng: location.lng,
+      lastUpdated: new Date(),
+    };
+    await driver.save();
+
+    return driver;
+  }
+
+  async getDriverProfile(userId) {
+    const driver = await repo.findByUserId(userId);
+    if (!driver) throw new AppError('Driver profile not found', 404);
     return driver;
   }
 }
