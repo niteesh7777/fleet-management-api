@@ -7,10 +7,18 @@ export default class DriverRepository {
   }
 
   async findAll(filter = {}) {
-    return await DriverProfile.find(filter)
+    const drivers = await DriverProfile.find(filter)
       .populate('userId', 'name email role') // attach user basic info
       .populate('assignedVehicle', 'vehicleNo model type status')
       .populate('activeTripId', 'tripCode status');
+
+    // Transform userId to user for API compatibility
+    return drivers.map((d) => {
+      const driver = d.toObject();
+      driver.user = driver.userId;
+      delete driver.userId;
+      return driver;
+    });
   }
 
   async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
@@ -25,25 +33,79 @@ export default class DriverRepository {
       DriverProfile.countDocuments(filter),
     ]);
 
-    return { drivers, total };
+    // Transform userId to user for API compatibility
+    const transformedDrivers = drivers.map((d) => {
+      const driver = d.toObject();
+      driver.user = driver.userId;
+      delete driver.userId;
+      return driver;
+    });
+
+    return { drivers: transformedDrivers, total };
   }
 
   async findById(id) {
-    return await DriverProfile.findById(id)
+    const driver = await DriverProfile.findById(id)
       .populate('userId', 'name email role')
       .populate('assignedVehicle', 'vehicleNo model type status')
       .populate('activeTripId', 'tripCode status');
+
+    if (!driver) return null;
+
+    // Transform userId to user for API compatibility
+    const driverObj = driver.toObject();
+    driverObj.user = driverObj.userId;
+    delete driverObj.userId;
+    return driverObj;
   }
 
   async update(id, updateData) {
-    return await DriverProfile.findByIdAndUpdate(id, updateData, {
+    const driver = await DriverProfile.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    });
+    })
+      .populate('userId', 'name email role')
+      .populate('assignedVehicle', 'vehicleNo model type status')
+      .populate('activeTripId', 'tripCode status');
+
+    if (!driver) return null;
+
+    // Transform userId to user for API compatibility
+    const driverObj = driver.toObject();
+    driverObj.user = driverObj.userId;
+    delete driverObj.userId;
+    return driverObj;
   }
 
   async delete(id) {
     // Soft delete → deactivate driver instead of removing document
-    return await DriverProfile.findByIdAndUpdate(id, { status: 'inactive' }, { new: true });
+    const driver = await DriverProfile.findByIdAndUpdate(
+      id,
+      { status: 'inactive' },
+      { new: true }
+    ).populate('userId', 'name email role');
+
+    if (!driver) return null;
+
+    // Transform userId to user for API compatibility
+    const driverObj = driver.toObject();
+    driverObj.user = driverObj.userId;
+    delete driverObj.userId;
+    return driverObj;
+  }
+
+  async findByUserId(userId) {
+    const driver = await DriverProfile.findOne({ userId })
+      .populate('userId', 'name email role')
+      .populate('assignedVehicle', 'vehicleNo model type status capacityKg')
+      .populate('activeTripId', 'tripCode status startTime endTime');
+
+    if (!driver) return null;
+
+    // Transform userId to user for API compatibility
+    const driverObj = driver.toObject();
+    driverObj.user = driverObj.userId;
+    delete driverObj.userId;
+    return driverObj;
   }
 }

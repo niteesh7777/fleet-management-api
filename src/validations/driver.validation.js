@@ -27,3 +27,8 @@ export const updateDriverSchema = Joi.object({
   experienceYears: Joi.number().min(0).optional(),
   status: Joi.string().valid('active', 'inactive', 'on-trip').optional(),
 });
+
+export const updateLocationSchema = Joi.object({
+  lat: Joi.number().min(-90).max(90).required(),
+  lng: Joi.number().min(-180).max(180).required(),
+});

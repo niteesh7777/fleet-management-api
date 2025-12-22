@@ -28,11 +28,19 @@ export const createTrip = async (req, res, next) => {
 
 export const getAllTrips = async (req, res, next) => {
   try {
+    // Debug: Log received query parameters
+    console.log('getAllTrips: Received query parameters:', req.query);
+
     // optionally accept filters via query params (e.g., ?status=started&clientId=...)
     const filter = { ...req.query };
+    console.log('getAllTrips: Processing filter:', filter);
+
     const trips = await service.getAllTrips(filter);
+    console.log('getAllTrips: Found trips:', trips.length);
+
     return success(res, 'Trips fetched successfully', { trips });
   } catch (err) {
+    console.error('getAllTrips error:', err);
     return next(err);
   }
 };
@@ -60,6 +68,21 @@ export const getTripsPaginated = async (req, res, next) => {
     // Add route filter
     if (req.query.routeId) {
       filter.routeId = req.query.routeId;
+    }
+
+    // Add date range filter (startDate and endDate for trip creation/start time)
+    if (req.query.startDate || req.query.endDate) {
+      filter.startTime = {};
+      if (req.query.startDate) {
+        filter.startTime.$gte = new Date(req.query.startDate);
+      }
+      if (req.query.endDate) {
+        filter.startTime.$lte = new Date(req.query.endDate);
+      }
+      // If no startTime fields were added, delete the filter
+      if (Object.keys(filter.startTime).length === 0) {
+        delete filter.startTime;
+      }
     }
 
     const { trips, total } = await service.getTripsPaginated(filter, { skip, limit });
@@ -173,6 +196,15 @@ export const getMyTrips = async (req, res, next) => {
   try {
     const trips = await service.getTripsForDriver(req.user.id);
     return success(res, 'Trips fetched successfully', { trips });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAvailableResources = async (req, res, next) => {
+  try {
+    const resources = await service.getAvailableResources();
+    return success(res, 'Available resources fetched successfully', resources);
   } catch (err) {
     next(err);
   }

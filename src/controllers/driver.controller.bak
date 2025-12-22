@@ -89,26 +89,3 @@ export const deactivateDriver = async (req, res, next) => {
     next(err);
   }
 };
-
-// DRIVER MOBILE APP ENDPOINTS
-export const updateDriverLocation = async (req, res, next) => {
-  try {
-    const { lat, lng } = req.body;
-    console.log(`Updating location for driver ${req.params.id}:`, { lat, lng });
-    const driver = await driverService.updateLocation(req.params.id, { lat, lng });
-    console.log('Location updated successfully:', driver.currentLocation);
-    return success(res, 'Location updated successfully', { driver });
-  } catch (err) {
-    console.error('Error updating driver location:', err);
-    next(err);
-  }
-};
-
-export const getMyProfile = async (req, res, next) => {
-  try {
-    const driver = await driverService.getDriverProfile(req.user.id);
-    return success(res, 'Driver profile fetched successfully', { driver });
-  } catch (err) {
-    next(err);
-  }
-};

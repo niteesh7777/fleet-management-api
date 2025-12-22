@@ -3,6 +3,7 @@ import { validate } from '../../middlewares/validation.middleware.js';
 import { pagination } from '../../middlewares/pagination.middleware.js';
 import {
   createTrip,
+  getAllTrips,
   getTripsPaginated,
   getTripById,
   updateTrip,
@@ -10,7 +11,6 @@ import {
   addProgressUpdate,
   completeTrip,
   getMyTrips,
-  getAvailableResources,
 } from '../../controllers/trip.controller.js';
 import {
   createTripSchema,
@@ -25,28 +25,15 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(requireAuth());
 
-// DRIVER ENDPOINTS - Must come before /:id routes
-router.get('/my', requireRole('driver'), getMyTrips);
-
-// Get available resources for trip creation (admin only)
-router.get('/available-resources', requireRole('admin'), getAvailableResources);
-
-// ADMIN ENDPOINTS
 router.post('/', requireRole('admin'), validate(createTripSchema), createTrip);
 
-// Get all trips with pagination (supports filters: status, clientId, routeId, startDate, endDate, search)
+router.get('/', requireRole('admin'), getAllTrips);
 router.get(
-  '/',
+  '/paginated',
   requireRole('admin'),
   pagination({ defaultLimit: 10, maxLimit: 100 }),
   getTripsPaginated
 );
-
-router.get('/:id', getTripById); // Drivers might need to see trip details
-
-router.put('/:id', requireRole('admin'), validate(updateTripSchema), updateTrip);
-
-router.delete('/:id', requireRole('admin'), deleteTrip);
 
 router.get('/:id', getTripById); // Drivers might need to see trip details
 
@@ -62,5 +49,7 @@ router.post(
 );
 
 router.post('/:id/complete', requireRole('driver', 'admin'), completeTrip);
+
+router.get('/my', requireRole('driver'), getMyTrips);
 
 export default router;

@@ -52,8 +52,12 @@ export const createTripSchema = Joi.object({
 
 export const updateTripSchema = Joi.object({
   routeId: Joi.string().optional(),
-  vehicleIds: Joi.array().items(Joi.string()).optional(),
-  driverIds: Joi.array().items(Joi.string()).optional(),
+  vehicleIds: Joi.array().items(Joi.string()).min(1).optional().messages({
+    'array.min': 'At least one vehicle must be assigned',
+  }),
+  driverIds: Joi.array().items(Joi.string()).min(1).optional().messages({
+    'array.min': 'At least one driver must be assigned',
+  }),
   clientId: Joi.string().optional(),
   goodsInfo: Joi.string().trim().optional(),
   loadWeightKg: Joi.number().min(0).optional(),

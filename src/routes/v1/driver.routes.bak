@@ -9,30 +9,17 @@ import {
   updateDriver,
   deleteDriver,
   deactivateDriver,
-  updateDriverLocation,
-  getMyProfile,
 } from '../../controllers/driver.controller.js';
 import {
   createDriverCompositeSchema,
   updateDriverSchema,
-  updateLocationSchema,
 } from '../../validations/driver.validation.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/role.middleware.js';
 
 const router = express.Router();
 
-// DRIVER MOBILE APP ENDPOINTS (authenticated driver only)
-router.get('/me', requireAuth(), requireRole('driver'), getMyProfile);
-router.put(
-  '/:id/location',
-  requireAuth(),
-  requireRole('driver'),
-  validate(updateLocationSchema),
-  updateDriverLocation
-);
-
-// ADMIN ENDPOINTS
+// CREATE DRIVER (User + DriverProfile)
 router.post(
   '/',
   requireAuth(),

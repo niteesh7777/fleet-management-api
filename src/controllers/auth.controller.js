@@ -11,9 +11,8 @@ const cookieOptions = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
   sameSite: 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000, 
+  maxAge: 7 * 24 * 60 * 60 * 1000,
 };
-
 
 export const register = async (req, res, next) => {
   try {
@@ -24,24 +23,23 @@ export const register = async (req, res, next) => {
   }
 };
 
-
 export const login = async (req, res, next) => {
   try {
     const { user, accessToken, refreshToken } = await service.login(req.body);
 
     res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
 
-    return success(res, 'Login successful', { user, accessToken });
+    // Also return refreshToken in body for mobile apps that can't use cookies
+    return success(res, 'Login successful', { user, accessToken, refreshToken });
   } catch (err) {
     return next(err);
   }
 };
 
-
-
 export const refresh = async (req, res, next) => {
   try {
-    const token = req.cookies[COOKIE_NAME];
+    // Support both cookie-based (web) and body-based (mobile) refresh tokens
+    const token = req.cookies[COOKIE_NAME] || req.body.refreshToken;
     if (!token) throw new AppError('No refresh token provided', 401);
 
     const { accessToken, refreshToken } = await service.refresh(token);
@@ -49,12 +47,12 @@ export const refresh = async (req, res, next) => {
     // Rotate refresh token
     res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
 
-    return success(res, 'Token refreshed', { accessToken });
+    // Return both tokens for mobile apps
+    return success(res, 'Token refreshed', { accessToken, refreshToken });
   } catch (err) {
     return next(err);
   }
 };
-
 
 export const logout = async (req, res, next) => {
   try {
