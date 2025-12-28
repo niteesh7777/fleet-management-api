@@ -20,11 +20,17 @@ const tollSchema = new mongoose.Schema(
 
 const routeSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
       trim: true,
-      unique: true,
+      // Note: Unique constraint removed - now scoped by companyId via compound index
     },
 
     source: {
@@ -64,7 +70,7 @@ const routeSchema = new mongoose.Schema(
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
+      ref: 'User',
       required: true,
     },
 
@@ -79,6 +85,9 @@ const routeSchema = new mongoose.Schema(
 );
 
 routeSchema.index({ 'source.name': 1, 'destination.name': 1 });
+// Compound unique index: name scoped by company
+routeSchema.index({ companyId: 1, name: 1 }, { unique: true });
+routeSchema.index({ companyId: 1, createdAt: -1 });
 
 routeSchema.virtual('trips', {
   ref: 'Trip',

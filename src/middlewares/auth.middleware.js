@@ -21,7 +21,19 @@ export const requireAuth = () => {
         return next(new AppError('Invalid or expired access token', 401));
       }
 
-      req.user = { id: payload.id, role: payload.role };
+      // CRITICAL: Validate tenant context exists in JWT
+      if (!payload.companyId) {
+        return next(new AppError('Invalid token: missing tenant context (companyId)', 401));
+      }
+
+      req.user = {
+        id: payload.id,
+        userId: payload.id, // Alias for consistency
+        email: payload.email,
+        companyId: payload.companyId,
+        platformRole: payload.platformRole,
+        companyRole: payload.companyRole,
+      };
 
       next();
     } catch (err) {

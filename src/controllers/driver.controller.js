@@ -20,7 +20,7 @@ export const createDriverComposite = async (req, res, next) => {
 // CRUD
 export const getAllDrivers = async (req, res, next) => {
   try {
-    const drivers = await driverService.getAllDrivers();
+    const drivers = await driverService.getAllDrivers(req.user.companyId);
     return success(res, 'Drivers fetched successfully', { drivers });
   } catch (err) {
     next(err);
@@ -45,7 +45,10 @@ export const getDriversPaginated = async (req, res, next) => {
       filter.status = req.query.status;
     }
 
-    const { drivers, total } = await driverService.getDriversPaginated(filter, { skip, limit });
+    const { drivers, total } = await driverService.getDriversPaginated(req.user.companyId, filter, {
+      skip,
+      limit,
+    });
     const paginatedResponse = createPaginatedResponse(drivers, total, page, limit);
 
     return success(res, 'Drivers fetched successfully', paginatedResponse);
@@ -94,19 +97,46 @@ export const deactivateDriver = async (req, res, next) => {
 export const updateDriverLocation = async (req, res, next) => {
   try {
     const { lat, lng } = req.body;
-    console.log(`Updating location for driver ${req.params.id}:`, { lat, lng });
-    const driver = await driverService.updateLocation(req.params.id, { lat, lng });
-    console.log('Location updated successfully:', driver.currentLocation);
+    console.log(`[updateDriverLocation] Request params:`, {
+      driverId: req.params.id,
+      lat,
+      lng,
+      userId: req.user?.id,
+      companyId: req.user?.companyId,
+    });
+
+    // Update location in database with companyId
+    const driver = await driverService.updateLocation(req.user.companyId, req.params.id, {
+      lat,
+      lng,
+    });
+    console.log('[updateDriverLocation] Location updated successfully:', driver.currentLocation);
+
+    // Broadcast real-time update to company room via Socket.IO
+    if (req.io) {
+      const companyRoom = `company:${req.user.companyId}`;
+      req.io.to(companyRoom).emit('driver:location:updated', {
+        driverId: driver._id.toString(),
+        companyId: req.user.companyId.toString(),
+        latitude: lat,
+        longitude: lng,
+        accuracy: null,
+        timestamp: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      console.log(`[Socket] Location broadcast to ${companyRoom}`);
+    }
+
     return success(res, 'Location updated successfully', { driver });
   } catch (err) {
-    console.error('Error updating driver location:', err);
+    console.error('[updateDriverLocation] Error:', err.message, err.stack);
     next(err);
   }
 };
 
 export const getMyProfile = async (req, res, next) => {
   try {
-    const driver = await driverService.getDriverProfile(req.user.id);
+    const driver = await driverService.getDriverProfile(req.user.companyId, req.user.id);
     return success(res, 'Driver profile fetched successfully', { driver });
   } catch (err) {
     next(err);

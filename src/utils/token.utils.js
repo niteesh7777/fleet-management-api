@@ -1,9 +1,17 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config/env.js';
 
-// Generate short-lived Access Token 
+// Generate short-lived Access Token
 export function generateAccessToken(user) {
-  const payload = { id: user._id, role: user.role };
+  // TODO: Ensure user object includes companyId, companyRole, platformRole
+  // This will be enforced at the service layer
+  const payload = {
+    id: user._id,
+    email: user.email,
+    companyId: user.companyId,
+    platformRole: user.platformRole,
+    companyRole: user.companyRole,
+  };
   return jwt.sign(payload, config.accessTokenSecret, {
     expiresIn: config.accessTokenExpiresIn,
   });
@@ -11,7 +19,12 @@ export function generateAccessToken(user) {
 
 // Generate long-lived Refresh Token
 export function generateRefreshToken(user, opts = {}) {
-  const payload = { id: user._id, jti: opts.jti };
+  // TODO: Ensure user object includes companyId
+  const payload = {
+    id: user._id,
+    companyId: user.companyId,
+    jti: opts.jti,
+  };
   return jwt.sign(payload, config.refreshTokenSecret, {
     expiresIn: config.refreshTokenExpiresIn,
   });

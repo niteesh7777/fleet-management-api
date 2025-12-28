@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const maintenanceLogSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     vehicleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Vehicle',
@@ -82,9 +88,10 @@ const maintenanceLogSchema = new mongoose.Schema(
   }
 );
 
-
 maintenanceLogSchema.index({ serviceDate: -1 });
 maintenanceLogSchema.index({ nextDueDate: 1 });
+maintenanceLogSchema.index({ companyId: 1, createdAt: -1 });
+maintenanceLogSchema.index({ companyId: 1, vehicleId: 1 });
 
 maintenanceLogSchema.virtual('vehicle', {
   ref: 'Vehicle',

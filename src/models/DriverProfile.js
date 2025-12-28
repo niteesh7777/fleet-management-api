@@ -1,20 +1,24 @@
-
 import mongoose from 'mongoose';
 
 const driverProfileSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      unique: true, 
     },
 
     licenseNo: {
       type: String,
       required: true,
       trim: true,
-      unique: true,
+      // Note: Unique constraint removed - now scoped by companyId via compound index
     },
 
     contact: {
@@ -65,8 +69,6 @@ const driverProfileSchema = new mongoose.Schema(
   }
 );
 
-
-
 driverProfileSchema.virtual('user', {
   ref: 'User',
   localField: 'userId',
@@ -74,7 +76,11 @@ driverProfileSchema.virtual('user', {
   justOne: true,
 });
 
-driverProfileSchema.index({ status: 1 });
+// Compound unique indexes: scoped by company
+driverProfileSchema.index({ companyId: 1, licenseNo: 1 }, { unique: true });
+driverProfileSchema.index({ companyId: 1, userId: 1 }, { unique: true });
+driverProfileSchema.index({ companyId: 1, status: 1 });
+driverProfileSchema.index({ companyId: 1, createdAt: -1 });
 driverProfileSchema.index({ 'contact.phone': 1 });
 
 const DriverProfile = mongoose.model('DriverProfile', driverProfileSchema);

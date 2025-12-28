@@ -19,6 +19,7 @@ import {
 } from '../../validations/trip.validation.js';
 import { requireRole } from '../../middlewares/role.middleware.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
+import { COMPANY_ADMIN_ROLES, COMPANY_DRIVER_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
@@ -26,41 +27,39 @@ const router = express.Router();
 router.use(requireAuth());
 
 // DRIVER ENDPOINTS - Must come before /:id routes
-router.get('/my', requireRole('driver'), getMyTrips);
+router.get('/my', requireRole(...COMPANY_DRIVER_ROLES), getMyTrips);
 
 // Get available resources for trip creation (admin only)
-router.get('/available-resources', requireRole('admin'), getAvailableResources);
+router.get('/available-resources', requireRole(...COMPANY_ADMIN_ROLES), getAvailableResources);
 
 // ADMIN ENDPOINTS
-router.post('/', requireRole('admin'), validate(createTripSchema), createTrip);
+router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createTripSchema), createTrip);
 
 // Get all trips with pagination (supports filters: status, clientId, routeId, startDate, endDate, search)
 router.get(
   '/',
-  requireRole('admin'),
+  requireRole(...COMPANY_ADMIN_ROLES),
   pagination({ defaultLimit: 10, maxLimit: 100 }),
   getTripsPaginated
 );
 
 router.get('/:id', getTripById); // Drivers might need to see trip details
 
-router.put('/:id', requireRole('admin'), validate(updateTripSchema), updateTrip);
+router.put('/:id', requireRole(...COMPANY_ADMIN_ROLES), validate(updateTripSchema), updateTrip);
 
-router.delete('/:id', requireRole('admin'), deleteTrip);
-
-router.get('/:id', getTripById); // Drivers might need to see trip details
-
-router.put('/:id', requireRole('admin'), validate(updateTripSchema), updateTrip);
-
-router.delete('/:id', requireRole('admin'), deleteTrip);
+router.delete('/:id', requireRole(...COMPANY_ADMIN_ROLES), deleteTrip);
 
 router.post(
   '/:id/progress',
-  requireRole('driver', 'admin'),
+  requireRole(...COMPANY_DRIVER_ROLES, ...COMPANY_ADMIN_ROLES),
   validate(progressUpdateSchema),
   addProgressUpdate
 );
 
-router.post('/:id/complete', requireRole('driver', 'admin'), completeTrip);
+router.post(
+  '/:id/complete',
+  requireRole(...COMPANY_DRIVER_ROLES, ...COMPANY_ADMIN_ROLES),
+  completeTrip
+);
 
 export default router;

@@ -16,7 +16,7 @@ export const createClient = async (req, res, next) => {
 
 export const getAllClients = async (req, res, next) => {
   try {
-    const clients = await service.getAllClients();
+    const clients = await service.getAllClients(req.user.companyId);
     return success(res, 'Clients fetched successfully', { clients });
   } catch (err) {
     next(err);
@@ -42,7 +42,10 @@ export const getClientsPaginated = async (req, res, next) => {
       filter.status = req.query.status;
     }
 
-    const { clients, total } = await service.getClientsPaginated(filter, { skip, limit });
+    const { clients, total } = await service.getClientsPaginated(req.user.companyId, filter, {
+      skip,
+      limit,
+    });
     const paginatedResponse = createPaginatedResponse(clients, total, page, limit);
 
     return success(res, 'Clients fetched successfully', paginatedResponse);

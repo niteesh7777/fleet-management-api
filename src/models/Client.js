@@ -21,11 +21,17 @@ const contactSchema = new mongoose.Schema(
 
 const clientSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     name: {
       type: String,
       required: true,
       trim: true,
-      unique: true,
+      // Note: Unique constraint removed - now scoped by companyId via compound index
     },
 
     type: {
@@ -64,14 +70,15 @@ const clientSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
 clientSchema.virtual('trips', {
   ref: 'Trip',
   localField: '_id',
   foreignField: 'clientId',
 });
 
-
+// Compound unique index: name scoped by company
+clientSchema.index({ companyId: 1, name: 1 }, { unique: true });
+clientSchema.index({ companyId: 1, createdAt: -1 });
 clientSchema.index({ 'contact.phone': 1 });
 clientSchema.index({ gstNo: 1 });
 

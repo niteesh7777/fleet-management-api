@@ -7,7 +7,7 @@ const service = new VehicleService();
 
 export const createVehicle = async (req, res, next) => {
   try {
-    const vehicle = await service.createVehicle(req.body);
+    const vehicle = await service.createVehicle(req.user.companyId, req.body);
 
     // Audit logging
     const creatorId = req.user?.id || req.user?._id;
@@ -28,7 +28,7 @@ export const createVehicle = async (req, res, next) => {
 
 export const getAllVehicles = async (req, res, next) => {
   try {
-    const vehicles = await service.getAllVehicles();
+    const vehicles = await service.getAllVehicles(req.user.companyId);
     return success(res, 'Vehicles fetched successfully', { vehicles });
   } catch (err) {
     next(err);
@@ -54,7 +54,10 @@ export const getVehiclesPaginated = async (req, res, next) => {
       filter.status = req.query.status;
     }
 
-    const { vehicles, total } = await service.getVehiclesPaginated(filter, { skip, limit });
+    const { vehicles, total } = await service.getVehiclesPaginated(req.user.companyId, filter, {
+      skip,
+      limit,
+    });
     const paginatedResponse = createPaginatedResponse(vehicles, total, page, limit);
 
     return success(res, 'Vehicles fetched successfully', paginatedResponse);
@@ -65,7 +68,7 @@ export const getVehiclesPaginated = async (req, res, next) => {
 
 export const getVehicleById = async (req, res, next) => {
   try {
-    const vehicle = await service.getVehicleById(req.params.id);
+    const vehicle = await service.getVehicleById(req.user.companyId, req.params.id);
     return success(res, 'Vehicle fetched successfully', { vehicle });
   } catch (err) {
     next(err);
@@ -75,9 +78,9 @@ export const getVehicleById = async (req, res, next) => {
 export const updateVehicle = async (req, res, next) => {
   try {
     // Get the original vehicle data for audit logging
-    const originalVehicle = await service.getVehicleById(req.params.id);
+    const originalVehicle = await service.getVehicleById(req.user.companyId, req.params.id);
 
-    const vehicle = await service.updateVehicle(req.params.id, req.body);
+    const vehicle = await service.updateVehicle(req.user.companyId, req.params.id, req.body);
 
     // Audit logging for status change
     const userId = req.user?.id || req.user?._id;
@@ -103,9 +106,9 @@ export const updateVehicle = async (req, res, next) => {
 export const deleteVehicle = async (req, res, next) => {
   try {
     // Get vehicle data before deletion for audit logging
-    const vehicleToDelete = await service.getVehicleById(req.params.id);
+    const vehicleToDelete = await service.getVehicleById(req.user.companyId, req.params.id);
 
-    const vehicle = await service.deleteVehicle(req.params.id);
+    const vehicle = await service.deleteVehicle(req.user.companyId, req.params.id);
 
     // Audit logging
     const deleterId = req.user?.id || req.user?._id;
@@ -134,9 +137,9 @@ export const updateVehicleStatus = async (req, res, next) => {
     const { status } = req.body;
 
     // Get the original vehicle data for audit logging
-    const originalVehicle = await service.getVehicleById(req.params.id);
+    const originalVehicle = await service.getVehicleById(req.user.companyId, req.params.id);
 
-    const vehicle = await service.updateStatus(req.params.id, status);
+    const vehicle = await service.updateStatus(req.user.companyId, req.params.id, status);
 
     // Audit logging for status change
     const userId = req.user?.id || req.user?._id;
@@ -160,7 +163,7 @@ export const updateVehicleStatus = async (req, res, next) => {
 
 export const checkInsurance = async (req, res, next) => {
   try {
-    const isExpired = await service.isInsuranceExpired(req.params.id);
+    const isExpired = await service.isInsuranceExpired(req.user.companyId, req.params.id);
     return success(res, 'Insurance status checked', { isExpired });
   } catch (err) {
     next(err);
@@ -170,7 +173,7 @@ export const checkInsurance = async (req, res, next) => {
 export const assignDriver = async (req, res, next) => {
   try {
     const { vehicleId, driverId } = req.params;
-    const result = await service.assignDriverToVehicle(vehicleId, driverId);
+    const result = await service.assignDriverToVehicle(req.user.companyId, vehicleId, driverId);
 
     return success(res, 'Driver assigned to vehicle successfully', result);
   } catch (err) {

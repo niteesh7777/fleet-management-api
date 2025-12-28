@@ -7,7 +7,7 @@ const service = new RouteService();
 
 export const createRoute = async (req, res, next) => {
   try {
-    const route = await service.createRoute(req.body);
+    const route = await service.createRoute(req.user.companyId, req.body, req.user.id);
     return success(res, 'Route created successfully', { route }, 201);
   } catch (err) {
     next(err);
@@ -16,7 +16,7 @@ export const createRoute = async (req, res, next) => {
 
 export const getAllRoutes = async (req, res, next) => {
   try {
-    const routes = await service.getAllRoutes();
+    const routes = await service.getAllRoutes(req.user.companyId);
     return success(res, 'Routes fetched successfully', { routes });
   } catch (err) {
     next(err);
@@ -42,7 +42,10 @@ export const getRoutesPaginated = async (req, res, next) => {
       filter.status = req.query.status;
     }
 
-    const { routes, total } = await service.getRoutesPaginated(filter, { skip, limit });
+    const { routes, total } = await service.getRoutesPaginated(req.user.companyId, filter, {
+      skip,
+      limit,
+    });
     const paginatedResponse = createPaginatedResponse(routes, total, page, limit);
 
     return success(res, 'Routes fetched successfully', paginatedResponse);
@@ -53,7 +56,7 @@ export const getRoutesPaginated = async (req, res, next) => {
 
 export const getRouteById = async (req, res, next) => {
   try {
-    const route = await service.getRouteById(req.params.id);
+    const route = await service.getRouteById(req.user.companyId, req.params.id);
     return success(res, 'Route fetched successfully', { route });
   } catch (err) {
     next(err);
@@ -62,7 +65,7 @@ export const getRouteById = async (req, res, next) => {
 
 export const updateRoute = async (req, res, next) => {
   try {
-    const route = await service.updateRoute(req.params.id, req.body);
+    const route = await service.updateRoute(req.user.companyId, req.params.id, req.body);
     return success(res, 'Route updated successfully', { route });
   } catch (err) {
     next(err);
@@ -71,7 +74,7 @@ export const updateRoute = async (req, res, next) => {
 
 export const deleteRoute = async (req, res, next) => {
   try {
-    const route = await service.deleteRoute(req.params.id);
+    const route = await service.deleteRoute(req.user.companyId, req.params.id);
     return success(res, 'Route deleted successfully', { route });
   } catch (err) {
     next(err);

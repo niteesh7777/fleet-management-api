@@ -3,6 +3,7 @@ import { requireAuth } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/role.middleware.js';
 import { success } from '../../utils/response.utils.js';
 import UserRepository from '../../repositories/user.repository.js';
+import { OWNER_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 const repo = new UserRepository();
@@ -27,7 +28,7 @@ router.get('/me', requireAuth(), async (req, res, next) => {
 });
 
 // For admin only
-router.get('/admin', requireAuth(), requireRole('admin'), (req, res) => {
+router.get('/admin', requireAuth(), requireRole(...OWNER_ADMIN_ROLES), (req, res) => {
   return success(res, 'Welcome Admin, you have access to this route', {
     user: req.user,
   });

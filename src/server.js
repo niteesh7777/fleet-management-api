@@ -2,6 +2,7 @@
 import app from './app.js';
 import { config } from './config/env.js';
 import connectDB, { closeConnection } from './config/db.js';
+import { initializeSocket } from './config/socket.js';
 
 const startServer = async () => {
   try {
@@ -9,6 +10,12 @@ const startServer = async () => {
     const server = app.listen(config.port, () => {
       console.log(`Server listening on port ${config.port}`);
     });
+
+    // Initialize Socket.IO for real-time fleet tracking
+    const io = initializeSocket(server);
+
+    // Make Socket.IO instance available to controllers
+    app.set('io', io);
 
     const shutdown = async () => {
       console.log('SIGTERM received: closing server');

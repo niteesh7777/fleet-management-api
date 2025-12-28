@@ -6,7 +6,8 @@ const service = new MaintenanceService();
 
 export const createMaintenance = async (req, res, next) => {
   try {
-    const log = await service.createMaintenance(req.body);
+    const { companyId, id: userId } = req.user;
+    const log = await service.createMaintenance(companyId, userId, req.body);
     return success(res, 'Maintenance log created successfully', { log }, 201);
   } catch (err) {
     next(err);
@@ -15,7 +16,8 @@ export const createMaintenance = async (req, res, next) => {
 
 export const getAllMaintenance = async (req, res, next) => {
   try {
-    const logs = await service.getAllMaintenance();
+    const { companyId } = req.user;
+    const logs = await service.getAllMaintenance(companyId);
     return success(res, 'Maintenance logs fetched successfully', { logs });
   } catch (err) {
     next(err);
@@ -25,6 +27,7 @@ export const getAllMaintenance = async (req, res, next) => {
 export const getMaintenancePaginated = async (req, res, next) => {
   try {
     const { page, limit, skip } = req.pagination;
+    const { companyId } = req.user;
     const filter = {};
 
     // Add search functionality
@@ -50,7 +53,10 @@ export const getMaintenancePaginated = async (req, res, next) => {
       filter.serviceType = req.query.serviceType;
     }
 
-    const { logs, total } = await service.getMaintenancePaginated(filter, { skip, limit });
+    const { logs, total } = await service.getMaintenancePaginated(companyId, filter, {
+      skip,
+      limit,
+    });
     const paginatedResponse = createPaginatedResponse(logs, total, page, limit);
 
     return success(res, 'Maintenance logs fetched successfully', paginatedResponse);
@@ -61,7 +67,8 @@ export const getMaintenancePaginated = async (req, res, next) => {
 
 export const getMaintenanceById = async (req, res, next) => {
   try {
-    const log = await service.getMaintenanceById(req.params.id);
+    const { companyId } = req.user;
+    const log = await service.getMaintenanceById(req.params.id, companyId);
     return success(res, 'Maintenance log fetched successfully', { log });
   } catch (err) {
     next(err);
@@ -70,7 +77,8 @@ export const getMaintenanceById = async (req, res, next) => {
 
 export const getLogsByVehicle = async (req, res, next) => {
   try {
-    const logs = await service.getLogsByVehicle(req.params.vehicleId);
+    const { companyId } = req.user;
+    const logs = await service.getLogsByVehicle(req.params.vehicleId, companyId);
     return success(res, 'Maintenance logs for vehicle fetched successfully', { logs });
   } catch (err) {
     next(err);
@@ -79,7 +87,8 @@ export const getLogsByVehicle = async (req, res, next) => {
 
 export const updateMaintenance = async (req, res, next) => {
   try {
-    const log = await service.updateMaintenance(req.params.id, req.body);
+    const { companyId } = req.user;
+    const log = await service.updateMaintenance(req.params.id, companyId, req.body);
     return success(res, 'Maintenance log updated successfully', { log });
   } catch (err) {
     next(err);
@@ -88,7 +97,8 @@ export const updateMaintenance = async (req, res, next) => {
 
 export const deleteMaintenance = async (req, res, next) => {
   try {
-    const log = await service.deleteMaintenance(req.params.id);
+    const { companyId } = req.user;
+    const log = await service.deleteMaintenance(req.params.id, companyId);
     return success(res, 'Maintenance log deleted successfully', { log });
   } catch (err) {
     next(err);

@@ -12,22 +12,23 @@ import {
 import { createRouteSchema, updateRouteSchema } from '../../validations/route.validation.js';
 import { requireRole } from '../../middlewares/role.middleware.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
+import { COMPANY_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
 // Apply authentication to all routes
 router.use(requireAuth());
 
-router.post('/', requireRole('admin'), validate(createRouteSchema), createRoute);
-router.get('/', requireRole('admin'), getAllRoutes);
+router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createRouteSchema), createRoute);
+router.get('/', requireRole(...COMPANY_ADMIN_ROLES), getAllRoutes);
 router.get(
   '/paginated',
-  requireRole('admin'),
+  requireRole(...COMPANY_ADMIN_ROLES),
   pagination({ defaultLimit: 10, maxLimit: 100 }),
   getRoutesPaginated
 );
 router.get('/:id', getRouteById); // Drivers might need to see route details
-router.put('/:id', requireRole('admin'), validate(updateRouteSchema), updateRoute);
-router.delete('/:id', requireRole('admin'), deleteRoute);
+router.put('/:id', requireRole(...COMPANY_ADMIN_ROLES), validate(updateRouteSchema), updateRoute);
+router.delete('/:id', requireRole(...COMPANY_ADMIN_ROLES), deleteRoute);
 
 export default router;

@@ -14,6 +14,42 @@ const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
+/**
+ * Platform signup endpoint for SaaS company onboarding
+ * Creates new company and company owner user in one atomic operation
+ *
+ * POST /platform/signup
+ * Body: {
+ *   companyName: string,
+ *   slug: string,
+ *   ownerName: string,
+ *   ownerEmail: string,
+ *   password: string
+ * }
+ */
+export const platformSignup = async (req, res, next) => {
+  try {
+    const { user, company, accessToken, refreshToken } = await service.platformSignup(req.body);
+
+    // Set refresh token cookie (for web clients)
+    res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
+
+    return success(
+      res,
+      'Company and owner created successfully',
+      {
+        user,
+        company,
+        accessToken,
+        refreshToken, // Also return in body for mobile clients
+      },
+      201
+    );
+  } catch (err) {
+    return next(err);
+  }
+};
+
 export const register = async (req, res, next) => {
   try {
     const user = await service.register(req.body);
@@ -25,6 +61,7 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
+    console.log('[AUTH] Login request body:', JSON.stringify(req.body, null, 2));
     const { user, accessToken, refreshToken } = await service.login(req.body);
 
     res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
@@ -32,6 +69,7 @@ export const login = async (req, res, next) => {
     // Also return refreshToken in body for mobile apps that can't use cookies
     return success(res, 'Login successful', { user, accessToken, refreshToken });
   } catch (err) {
+    console.log('[AUTH] Login error:', err.message);
     return next(err);
   }
 };

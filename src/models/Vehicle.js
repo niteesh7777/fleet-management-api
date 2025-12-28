@@ -2,13 +2,19 @@ import mongoose from 'mongoose';
 
 const vehicleSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     vehicleNo: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
       match: [/^[A-Z0-9-]+$/, 'Invalid vehicle registration number format'],
+      // Note: Unique constraint removed - now scoped by companyId via compound index
     },
 
     model: {
@@ -72,7 +78,6 @@ const vehicleSchema = new mongoose.Schema(
   }
 );
 
-
 vehicleSchema.virtual('activeTrip', {
   ref: 'Trip',
   localField: 'currentTripId',
@@ -86,6 +91,10 @@ vehicleSchema.virtual('drivers', {
   foreignField: '_id',
 });
 
+// Compound unique index: vehicleNo scoped by company
+vehicleSchema.index({ companyId: 1, vehicleNo: 1 }, { unique: true });
+vehicleSchema.index({ companyId: 1, status: 1 });
+vehicleSchema.index({ companyId: 1, createdAt: -1 });
 
 // Check if insurance expired
 vehicleSchema.methods.isInsuranceExpired = function () {

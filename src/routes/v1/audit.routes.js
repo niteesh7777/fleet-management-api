@@ -6,16 +6,18 @@ import AuditService from '../../services/audit.service.js';
 import { success } from '../../utils/response.utils.js';
 import { createPaginatedResponse } from '../../middlewares/pagination.middleware.js';
 import { getAuditLogsSchema } from '../../validations/audit.validation.js';
+import { OWNER_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
 // All routes require authentication and admin role
 router.use(requireAuth());
-router.use(requireRole('admin'));
+router.use(requireRole(...OWNER_ADMIN_ROLES));
 
 /**
  * GET /api/v1/audit
  * Get audit logs with filtering and pagination
+ * IMPORTANT: Scoped to company for multi-tenant isolation
  */
 router.get('/', validate(getAuditLogsSchema), async (req, res, next) => {
   try {
@@ -38,7 +40,13 @@ router.get('/', validate(getAuditLogsSchema), async (req, res, next) => {
     if (dateFrom) filters.dateFrom = dateFrom;
     if (dateTo) filters.dateTo = dateTo;
 
-    const result = await AuditService.getAuditLogs(filters, parseInt(page), parseInt(limit));
+    // ✅ CRITICAL: Enforce company scoping to prevent cross-tenant data access
+    const result = await AuditService.getAuditLogs(
+      req.user.companyId, // ✅ Always scope to requesting user's company
+      filters,
+      parseInt(page),
+      parseInt(limit)
+    );
     const paginatedResponse = createPaginatedResponse(
       result.logs,
       result.pagination.total,
@@ -55,13 +63,20 @@ router.get('/', validate(getAuditLogsSchema), async (req, res, next) => {
 /**
  * GET /api/v1/audit/:entityType/:entityId
  * Get audit logs for a specific entity
+ * IMPORTANT: Scoped to company for multi-tenant isolation
  */
 router.get('/:entityType/:entityId', async (req, res, next) => {
   try {
     const { entityType, entityId } = req.params;
     const { limit = 20 } = req.query;
 
-    const logs = await AuditService.getEntityAuditLogs(entityType, entityId, parseInt(limit));
+    // ✅ CRITICAL: Enforce company scoping to prevent cross-tenant data access
+    const logs = await AuditService.getEntityAuditLogs(
+      req.user.companyId, // ✅ Always scope to requesting user's company
+      entityType,
+      entityId,
+      parseInt(limit)
+    );
 
     return success(res, 'Entity audit logs retrieved successfully', { logs });
   } catch (error) {

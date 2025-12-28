@@ -19,12 +19,18 @@ const progressUpdateSchema = new mongoose.Schema(
 
 const tripSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     tripCode: {
       type: String,
       required: true,
-      unique: true,
       uppercase: true,
       trim: true,
+      // Note: Unique constraint removed - now scoped by companyId via compound index
     },
 
     routeId: {
@@ -93,7 +99,6 @@ const tripSchema = new mongoose.Schema(
   }
 );
 
-
 tripSchema.index({ startTime: 1, endTime: 1 });
 
 tripSchema.virtual('route', {
@@ -122,6 +127,12 @@ tripSchema.virtual('client', {
   justOne: true,
 });
 
+// Compound unique index: tripCode scoped by company
+tripSchema.index({ companyId: 1, tripCode: 1 }, { unique: true });
+tripSchema.index({ companyId: 1, status: 1 });
+tripSchema.index({ companyId: 1, createdAt: -1 });
+tripSchema.index({ companyId: 1, clientId: 1 });
+tripSchema.index({ companyId: 1, routeId: 1 });
 
 // Add a progress update (with note/location)
 tripSchema.methods.addProgressUpdate = async function (updateData) {

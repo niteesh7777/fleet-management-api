@@ -11,12 +11,13 @@ import {
   toggleUserStatus,
 } from '../../controllers/user.controller.js';
 import { createUserSchema, updateUserSchema } from '../../validations/user.validation.js';
+import { OWNER_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
 // All routes require authentication and admin role
 router.use(requireAuth());
-router.use(requireRole('admin'));
+router.use(requireRole(...OWNER_ADMIN_ROLES));
 
 router.get('/', getAllUsers);
 router.get('/:id', getUserById);

@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const auditLogSchema = new mongoose.Schema(
   {
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Company',
+      required: true,
+      index: true,
+    },
     action: {
       type: String,
       required: true,
@@ -55,10 +61,10 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for efficient querying
-auditLogSchema.index({ action: 1, createdAt: -1 });
-auditLogSchema.index({ entityType: 1, entityId: 1, createdAt: -1 });
-auditLogSchema.index({ userId: 1, createdAt: -1 });
+// Indexes for efficient querying - all scoped by company
+auditLogSchema.index({ companyId: 1, action: 1, createdAt: -1 });
+auditLogSchema.index({ companyId: 1, entityType: 1, entityId: 1, createdAt: -1 });
+auditLogSchema.index({ companyId: 1, userId: 1, createdAt: -1 });
 
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 

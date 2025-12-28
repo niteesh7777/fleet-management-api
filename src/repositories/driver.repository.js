@@ -1,14 +1,24 @@
 import DriverProfile from '../models/DriverProfile.js';
+import { TenantRepository } from './base.repository.js';
 
-export default class DriverRepository {
-  async create(data) {
-    const driver = new DriverProfile(data);
-    return await driver.save();
+export default class DriverRepository extends TenantRepository {
+  constructor() {
+    super(DriverProfile);
   }
 
-  async findAll(filter = {}) {
-    const drivers = await DriverProfile.find(filter)
-      .populate('userId', 'name email role') // attach user basic info
+  /**
+   * Get all drivers for a company
+   * @param {String} companyId - Company ObjectId
+   * @param {Object} filter - Additional filters
+   * @returns {Promise<Array>}
+   */
+  async getAllByCompany(companyId, filter = {}) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const drivers = await this.Model.find({ ...filter, companyId })
+      .populate('userId', 'name email platformRole companyRole')
       .populate('assignedVehicle', 'vehicleNo model type status')
       .populate('activeTripId', 'tripCode status');
 
@@ -21,16 +31,30 @@ export default class DriverRepository {
     });
   }
 
-  async findAllPaginated(filter = {}, { skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) {
+  /**
+   * Get paginated drivers for a company
+   * @param {String} companyId - Company ObjectId
+   * @param {Object} filter - Additional filters
+   * @param {Object} options - { skip, limit, sort }
+   * @returns {Promise<{drivers: Array, total: Number}>}
+   */
+  async getAllByCompanyPaginated(companyId, filter = {}, options = {}) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const { skip = 0, limit = 10, sort = { createdAt: -1 } } = options;
+    const fullFilter = { ...filter, companyId };
+
     const [drivers, total] = await Promise.all([
-      DriverProfile.find(filter)
-        .populate('userId', 'name email role')
+      this.Model.find(fullFilter)
+        .populate('userId', 'name email platformRole companyRole')
         .populate('assignedVehicle', 'vehicleNo model type status')
         .populate('activeTripId', 'tripCode status')
         .sort(sort)
         .skip(skip)
         .limit(limit),
-      DriverProfile.countDocuments(filter),
+      this.Model.countDocuments(fullFilter),
     ]);
 
     // Transform userId to user for API compatibility
@@ -44,9 +68,19 @@ export default class DriverRepository {
     return { drivers: transformedDrivers, total };
   }
 
-  async findById(id) {
-    const driver = await DriverProfile.findById(id)
-      .populate('userId', 'name email role')
+  /**
+   * Get driver by ID for a company
+   * @param {String} driverId - Driver ObjectId
+   * @param {String} companyId - Company ObjectId
+   * @returns {Promise<Object|null>}
+   */
+  async getByIdAndCompany(driverId, companyId) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const driver = await this.Model.findOne({ _id: driverId, companyId })
+      .populate('userId', 'name email platformRole companyRole')
       .populate('assignedVehicle', 'vehicleNo model type status')
       .populate('activeTripId', 'tripCode status');
 
@@ -59,12 +93,34 @@ export default class DriverRepository {
     return driverObj;
   }
 
-  async update(id, updateData) {
-    const driver = await DriverProfile.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    })
-      .populate('userId', 'name email role')
+  /**
+   * Create driver profile for company
+   * @param {String} companyId - Company ObjectId
+   * @param {Object} data - Driver profile data
+   * @returns {Promise<Object>}
+   */
+  async createForCompany(companyId, data) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+    return await this.create(companyId, data);
+  }
+
+  /**
+   * Update driver for company
+   * @param {String} driverId - Driver ObjectId
+   * @param {String} companyId - Company ObjectId
+   * @param {Object} updateData - Fields to update
+   * @returns {Promise<Object|null>}
+   */
+  async updateByIdAndCompany(driverId, companyId, updateData) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const driver = await super
+      .updateByIdAndCompany(driverId, companyId, updateData)
+      .populate('userId', 'name email platformRole companyRole')
       .populate('assignedVehicle', 'vehicleNo model type status')
       .populate('activeTripId', 'tripCode status');
 
@@ -77,17 +133,31 @@ export default class DriverRepository {
     return driverObj;
   }
 
-  async delete(id) {
-    // Soft delete → deactivate driver instead of removing document
-    const driver = await DriverProfile.findByIdAndUpdate(
-      id,
-      { status: 'inactive' },
-      { new: true }
-    ).populate('userId', 'name email role');
+  /**
+   * Delete driver for company
+   * @param {String} driverId - Driver ObjectId
+   * @param {String} companyId - Company ObjectId
+   * @returns {Promise<Object|null>}
+   */
+  async deleteByIdAndCompany(driverId, companyId) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+    return await super.deleteByIdAndCompany(driverId, companyId);
+  }
+
+  async findByUserIdAndCompany(companyId, userId) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const driver = await this.Model.findOne({ companyId, userId })
+      .populate('userId', 'name email platformRole companyRole')
+      .populate('assignedVehicle', 'vehicleNo model type status capacityKg')
+      .populate('activeTripId', 'tripCode status startTime endTime');
 
     if (!driver) return null;
 
-    // Transform userId to user for API compatibility
     const driverObj = driver.toObject();
     driverObj.user = driverObj.userId;
     delete driverObj.userId;
@@ -99,6 +169,40 @@ export default class DriverRepository {
       .populate('userId', 'name email role')
       .populate('assignedVehicle', 'vehicleNo model type status capacityKg')
       .populate('activeTripId', 'tripCode status startTime endTime');
+
+    if (!driver) return null;
+
+    // Transform userId to user for API compatibility
+    const driverObj = driver.toObject();
+    driverObj.user = driverObj.userId;
+    delete driverObj.userId;
+    return driverObj;
+  }
+
+  /**
+   * Update driver location
+   * @param {string} driverId - Driver ID
+   * @param {string} companyId - Company ObjectId
+   * @param {object} location - Location object { lat, lng, lastUpdated }
+   * @returns {Promise<Object>}
+   */
+  async updateLocation(driverId, companyId, location) {
+    if (!companyId) {
+      throw new Error('companyId is required');
+    }
+
+    const driver = await this.Model.findOneAndUpdate(
+      { _id: driverId, companyId },
+      {
+        $set: {
+          currentLocation: location,
+        },
+      },
+      { new: true }
+    )
+      .populate('userId', 'name email platformRole companyRole')
+      .populate('assignedVehicle', 'vehicleNo model type status')
+      .populate('activeTripId', 'tripCode status');
 
     if (!driver) return null;
 

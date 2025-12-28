@@ -19,15 +19,16 @@ import {
 } from '../../validations/driver.validation.js';
 import { requireAuth } from '../../middlewares/auth.middleware.js';
 import { requireRole } from '../../middlewares/role.middleware.js';
+import { COMPANY_ADMIN_ROLES, COMPANY_DRIVER_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
 // DRIVER MOBILE APP ENDPOINTS (authenticated driver only)
-router.get('/me', requireAuth(), requireRole('driver'), getMyProfile);
+router.get('/me', requireAuth(), requireRole(...COMPANY_DRIVER_ROLES), getMyProfile);
 router.put(
   '/:id/location',
   requireAuth(),
-  requireRole('driver'),
+  requireRole(...COMPANY_DRIVER_ROLES),
   validate(updateLocationSchema),
   updateDriverLocation
 );
@@ -36,22 +37,28 @@ router.put(
 router.post(
   '/',
   requireAuth(),
-  requireRole('admin'),
+  requireRole(...COMPANY_ADMIN_ROLES),
   validate(createDriverCompositeSchema),
   createDriverComposite
 );
 
-router.get('/', requireAuth(), requireRole('admin'), getAllDrivers);
+router.get('/', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), getAllDrivers);
 router.get(
   '/paginated',
   requireAuth(),
-  requireRole('admin'),
+  requireRole(...COMPANY_ADMIN_ROLES),
   pagination({ defaultLimit: 10, maxLimit: 100 }),
   getDriversPaginated
 );
-router.get('/:id', requireAuth(), requireRole('admin'), getDriverById);
-router.put('/:id', requireAuth(), requireRole('admin'), validate(updateDriverSchema), updateDriver);
-router.delete('/:id', requireAuth(), requireRole('admin'), deleteDriver);
-router.put('/:id/deactivate', requireAuth(), requireRole('admin'), deactivateDriver);
+router.get('/:id', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), getDriverById);
+router.put(
+  '/:id',
+  requireAuth(),
+  requireRole(...COMPANY_ADMIN_ROLES),
+  validate(updateDriverSchema),
+  updateDriver
+);
+router.delete('/:id', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), deleteDriver);
+router.put('/:id/deactivate', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), deactivateDriver);
 
 export default router;

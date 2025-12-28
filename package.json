@@ -10,6 +10,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "build": "echo 'No build step for backend'",
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset",
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix",
     "format": "prettier --write .",
@@ -27,6 +29,8 @@
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.19.3",
+    "redis": "^5.10.0",
+    "socket.io": "^4.8.3",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
