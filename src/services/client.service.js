@@ -68,4 +68,108 @@ export default class ClientService {
     if (!deleted) throw new AppError('Client not found', 404);
     return deleted;
   }
+
+  /**
+   * Check dependencies before deleting client
+   * @param {string} companyId - Company ObjectId
+   * @param {string} clientId - Client ID
+   * @returns {object} Dependency information
+   */
+  async checkClientDependencies(companyId, clientId) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    const client = await repo.findById(clientId);
+    if (!client) throw new AppError('Client not found', 404);
+
+    // Check if client belongs to company
+    if (client.companyId.toString() !== companyId.toString()) {
+      throw new AppError('Client not found', 404);
+    }
+
+    // Import Trip model
+    const Trip = (await import('../models/trip.model.js')).default;
+
+    const activeTrips = await Trip.countDocuments({
+      companyId,
+      clientId,
+      status: { $in: ['pending', 'started', 'in-progress', 'in-transit'] },
+    });
+
+    const totalTrips = await Trip.countDocuments({
+      companyId,
+      clientId,
+    });
+
+    const blockingReasons = [];
+    if (activeTrips > 0) {
+      blockingReasons.push(`Client has ${activeTrips} active trip(s)`);
+    }
+
+    return {
+      activeTrips,
+      totalTrips,
+      completedTrips: totalTrips - activeTrips,
+      canDelete: activeTrips === 0,
+      blockingReasons,
+    };
+  }
+
+  /**
+   * Bulk delete clients with validation
+   * @param {string} companyId - Company ObjectId
+   * @param {string[]} ids - Array of client IDs
+   * @returns {object} Deletion results
+   */
+  async bulkDeleteClients(companyId, ids) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Client IDs array is required', 400);
+    }
+
+    const results = {
+      deleted: [],
+      failed: [],
+      total: ids.length,
+    };
+
+    for (const id of ids) {
+      try {
+        const client = await repo.findById(id);
+        if (!client) {
+          results.failed.push({ id, reason: 'Client not found' });
+          continue;
+        }
+
+        // Verify client belongs to company
+        if (client.companyId.toString() !== companyId.toString()) {
+          results.failed.push({ id, reason: 'Client not found' });
+          continue;
+        }
+
+        // Check dependencies
+        const dependencies = await this.checkClientDependencies(companyId, id);
+        if (!dependencies.canDelete) {
+          results.failed.push({
+            id,
+            name: client.name,
+            reason: dependencies.blockingReasons.join(', '),
+          });
+          continue;
+        }
+
+        // Delete client
+        await repo.delete(id);
+        results.deleted.push({ id, name: client.name });
+      } catch (error) {
+        results.failed.push({ id, reason: error.message });
+      }
+    }
+
+    return results;
+  }
 }

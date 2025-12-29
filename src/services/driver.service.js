@@ -172,4 +172,97 @@ export default class DriverService {
     if (!driver) throw new AppError('Driver profile not found', 404);
     return driver;
   }
+
+  /**
+   * Check dependencies before deleting driver
+   * @param {string} companyId - Company ObjectId
+   * @param {string} driverId - Driver ID
+   * @returns {object} Dependency information
+   */
+  async checkDriverDependencies(companyId, driverId) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    const driver = await repo.getByIdAndCompany(driverId, companyId);
+    if (!driver) throw new AppError('Driver not found', 404);
+
+    // Import models
+    const Trip = (await import('../models/trip.model.js')).default;
+    const Vehicle = (await import('../models/vehicle.model.js')).default;
+
+    const activeTrips = await Trip.countDocuments({
+      companyId,
+      driverId,
+      status: { $in: ['pending', 'started', 'in-progress'] },
+    });
+
+    const assignedVehicles = await Vehicle.countDocuments({
+      companyId,
+      assignedDrivers: driverId,
+    });
+
+    const blockingReasons = [];
+    if (activeTrips > 0) {
+      blockingReasons.push(`Driver has ${activeTrips} active trip(s)`);
+    }
+
+    return {
+      activeTrips,
+      assignedVehicles,
+      canDelete: activeTrips === 0,
+      blockingReasons,
+    };
+  }
+
+  /**
+   * Bulk delete drivers with validation
+   * @param {string} companyId - Company ObjectId
+   * @param {string[]} ids - Array of driver IDs
+   * @returns {object} Deletion results
+   */
+  async bulkDeleteDrivers(companyId, ids) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Driver IDs array is required', 400);
+    }
+
+    const results = {
+      deleted: [],
+      failed: [],
+      total: ids.length,
+    };
+
+    for (const id of ids) {
+      try {
+        const driver = await repo.getByIdAndCompany(id, companyId);
+        if (!driver) {
+          results.failed.push({ id, reason: 'Driver not found' });
+          continue;
+        }
+
+        // Check dependencies
+        const dependencies = await this.checkDriverDependencies(companyId, id);
+        if (!dependencies.canDelete) {
+          results.failed.push({
+            id,
+            name: driver.user?.name || driver.licenseNo,
+            reason: dependencies.blockingReasons.join(', '),
+          });
+          continue;
+        }
+
+        // Delete driver
+        await repo.delete(id);
+        results.deleted.push({ id, name: driver.user?.name || driver.licenseNo });
+      } catch (error) {
+        results.failed.push({ id, reason: error.message });
+      }
+    }
+
+    return results;
+  }
 }

@@ -8,8 +8,13 @@ import { config } from '../config/env.js';
 export const requireAuth = () => {
   return async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization || '';
-      const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+      // Try cookie first (web clients), fallback to Authorization header (mobile clients)
+      let token = req.cookies?.accessToken;
+
+      if (!token) {
+        const authHeader = req.headers.authorization || '';
+        token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+      }
 
       if (!token) return next(new AppError('Authorization token missing', 401));
 
@@ -17,7 +22,6 @@ export const requireAuth = () => {
       try {
         payload = jwt.verify(token, config.accessTokenSecret);
       } catch (err) {
-        console.log('err:', err);
         return next(new AppError('Invalid or expired access token', 401));
       }
 

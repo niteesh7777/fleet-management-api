@@ -6,7 +6,6 @@ import router from './routes/index.js';
 import errorHandler from './middlewares/error.middleware.js';
 import { frontendURL } from './constants.js';
 import { globalLimiter, authLimiter, companyLimiter, writeLimiter } from './config/rateLimiting.js';
-import { requestLogger } from './utils/logger.js';
 
 const app = express();
 
@@ -20,9 +19,6 @@ app.use(
     credentials: true,
   })
 );
-
-// ✅ Structured Request Logging - logs all requests with correlation IDs and timing
-app.use(requestLogger);
 
 // 📦 Body Parsing
 app.use(express.json({ limit: '1mb' }));

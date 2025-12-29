@@ -48,6 +48,6 @@ router.post('/refresh', refresh);
  * Requires authentication to logout
  * Clears refresh token JTI from database
  */
-router.post('/logout', requireAuth, logout);
+router.post('/logout', requireAuth(), logout);
 
 export default router;

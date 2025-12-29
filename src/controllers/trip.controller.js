@@ -212,3 +212,45 @@ export const getAvailableResources = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getTripDependencies = async (req, res, next) => {
+  try {
+    const dependencies = await service.checkTripDependencies(req.user.companyId, req.params.id);
+
+    return success(res, 'Dependencies checked successfully', { dependencies });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkDeleteTrips = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Trip IDs array is required', 400);
+    }
+
+    const results = await service.bulkDeleteTrips(req.user.companyId, ids);
+
+    // Audit log for each successfully deleted trip
+    const userId = req.user?.id || req.user?._id;
+    for (const deleted of results.deleted) {
+      await AuditService.log({
+        action: 'trip_bulk_deletion',
+        entityType: 'trip',
+        entityId: deleted.id,
+        userId,
+        metadata: {
+          deletedBy: userId,
+          tripCode: deleted.tripCode,
+          bulkOperation: true,
+        },
+      });
+    }
+
+    return success(res, 'Bulk delete completed', { results });
+  } catch (err) {
+    next(err);
+  }
+};

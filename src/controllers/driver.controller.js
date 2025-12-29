@@ -142,3 +142,32 @@ export const getMyProfile = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getDriverDependencies = async (req, res, next) => {
+  try {
+    const dependencies = await driverService.checkDriverDependencies(
+      req.user.companyId,
+      req.params.id
+    );
+
+    return success(res, 'Dependencies checked successfully', { dependencies });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkDeleteDrivers = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Driver IDs array is required', 400);
+    }
+
+    const results = await driverService.bulkDeleteDrivers(req.user.companyId, ids);
+
+    return success(res, 'Bulk delete completed', { results });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -22,8 +22,7 @@ export default class TripService {
     // Prevent assigning vehicles that are already in trip
     if (data.vehicleIds?.length) {
       for (const vehicleId of data.vehicleIds) {
-        // TODO: Verify vehicle belongs to companyId
-        const v = await vehicleRepo.findById(vehicleId);
+        const v = await vehicleRepo.findByIdAndCompany(vehicleId, companyId);
         if (!v) throw new AppError(`Vehicle not found: ${vehicleId}`, 404);
         if (v.status === 'in-trip') {
           throw new AppError(`Vehicle ${v.vehicleNo} is already in a trip`, 400);
@@ -34,8 +33,7 @@ export default class TripService {
     // Prevent assigning drivers already in trip
     if (data.driverIds?.length) {
       for (const driverId of data.driverIds) {
-        // TODO: Verify driver belongs to companyId
-        const d = await driverRepo.findById(driverId);
+        const d = await driverRepo.findByIdAndCompany(driverId, companyId);
         if (!d) throw new AppError(`Driver not found: ${driverId}`, 404);
         if (d.status === 'on-trip') {
           throw new AppError(`Driver ${d.licenseNo} is already assigned to a trip`, 400);
@@ -51,11 +49,17 @@ export default class TripService {
 
     // Update vehicle & driver status to "in-trip"
     for (const vehicleId of data.vehicleIds || []) {
-      await vehicleRepo.update(vehicleId, { status: 'in-trip', currentTripId: trip._id });
+      await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
+        status: 'in-trip',
+        currentTripId: trip._id,
+      });
     }
 
     for (const driverId of data.driverIds || []) {
-      await driverRepo.update(driverId, { status: 'on-trip', activeTripId: trip._id });
+      await driverRepo.updateByIdAndCompany(driverId, companyId, {
+        status: 'on-trip',
+        activeTripId: trip._id,
+      });
     }
 
     return trip;
@@ -185,7 +189,7 @@ export default class TripService {
       // Release old vehicles no longer assigned
       const vehiclesToRelease = oldVehicleIds.filter((vId) => !newVehicleIds.includes(vId));
       for (const vehicleId of vehiclesToRelease) {
-        await vehicleRepo.update(vehicleId, {
+        await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
           status: 'available',
           currentTripId: null,
         });
@@ -194,12 +198,12 @@ export default class TripService {
       // Assign new vehicles
       const vehiclesToAssign = newVehicleIds.filter((vId) => !oldVehicleIds.includes(vId));
       for (const vehicleId of vehiclesToAssign) {
-        const v = await vehicleRepo.findById(vehicleId);
+        const v = await vehicleRepo.findByIdAndCompany(vehicleId, companyId);
         if (!v) throw new AppError(`Vehicle not found: ${vehicleId}`, 404);
         if (v.status === 'in-trip' && v.currentTripId?.toString() !== id) {
           throw new AppError(`Vehicle ${v.vehicleNo} is already in another trip`, 400);
         }
-        await vehicleRepo.update(vehicleId, {
+        await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
           status: 'in-trip',
           currentTripId: id,
         });
@@ -214,7 +218,7 @@ export default class TripService {
       // Release old drivers no longer assigned
       const driversToRelease = oldDriverIds.filter((dId) => !newDriverIds.includes(dId));
       for (const driverId of driversToRelease) {
-        await driverRepo.update(driverId, {
+        await driverRepo.updateByIdAndCompany(driverId, companyId, {
           status: 'active',
           activeTripId: null,
         });
@@ -223,12 +227,12 @@ export default class TripService {
       // Assign new drivers
       const driversToAssign = newDriverIds.filter((dId) => !oldDriverIds.includes(dId));
       for (const driverId of driversToAssign) {
-        const d = await driverRepo.findById(driverId);
+        const d = await driverRepo.findByIdAndCompany(driverId, companyId);
         if (!d) throw new AppError(`Driver not found: ${driverId}`, 404);
         if (d.status === 'on-trip' && d.activeTripId?.toString() !== id) {
           throw new AppError(`Driver ${d.licenseNo} is already assigned to another trip`, 400);
         }
-        await driverRepo.update(driverId, {
+        await driverRepo.updateByIdAndCompany(driverId, companyId, {
           status: 'on-trip',
           activeTripId: id,
         });
@@ -254,14 +258,14 @@ export default class TripService {
 
     // Release vehicles and drivers before deletion
     for (const vehicleId of trip.vehicleIds || []) {
-      await vehicleRepo.update(vehicleId, {
+      await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
         status: 'available',
         currentTripId: null,
       });
     }
 
     for (const driverId of trip.driverIds || []) {
-      await driverRepo.update(driverId, {
+      await driverRepo.updateByIdAndCompany(driverId, companyId, {
         status: 'active',
         activeTripId: null,
       });
@@ -306,14 +310,14 @@ export default class TripService {
 
     // Release vehicles and drivers
     for (const vehicleId of trip.vehicleIds || []) {
-      await vehicleRepo.update(vehicleId, {
+      await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
         status: 'available',
         currentTripId: null,
       });
     }
 
     for (const driverId of trip.driverIds || []) {
-      await driverRepo.update(driverId, {
+      await driverRepo.updateByIdAndCompany(driverId, companyId, {
         status: 'active',
         activeTripId: null,
       });
@@ -471,5 +475,87 @@ export default class TripService {
     }
 
     return processedFilter;
+  }
+
+  /**
+   * Check dependencies before deleting trip
+   * @param {string} companyId - Company ObjectId
+   * @param {string} tripId - Trip ID
+   * @returns {object} Dependency information
+   */
+  async checkTripDependencies(companyId, tripId) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    const trip = await tripRepo.getByIdAndCompany(tripId, companyId);
+    if (!trip) throw new AppError('Trip not found', 404);
+
+    const blockingReasons = [];
+    const isActive = ['started', 'in-progress', 'in-transit'].includes(trip.status);
+
+    if (isActive) {
+      blockingReasons.push(`Trip is currently ${trip.status}`);
+    }
+
+    return {
+      status: trip.status,
+      isActive,
+      vehicleCount: trip.vehicleIds?.length || 0,
+      driverCount: trip.driverIds?.length || 0,
+      canDelete: !isActive,
+      blockingReasons,
+    };
+  }
+
+  /**
+   * Bulk delete trips with validation
+   * @param {string} companyId - Company ObjectId
+   * @param {string[]} ids - Array of trip IDs
+   * @returns {object} Deletion results
+   */
+  async bulkDeleteTrips(companyId, ids) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Trip IDs array is required', 400);
+    }
+
+    const results = {
+      deleted: [],
+      failed: [],
+      total: ids.length,
+    };
+
+    for (const id of ids) {
+      try {
+        const trip = await tripRepo.getByIdAndCompany(id, companyId);
+        if (!trip) {
+          results.failed.push({ id, reason: 'Trip not found' });
+          continue;
+        }
+
+        // Check dependencies
+        const dependencies = await this.checkTripDependencies(companyId, id);
+        if (!dependencies.canDelete) {
+          results.failed.push({
+            id,
+            tripCode: trip.tripCode,
+            reason: dependencies.blockingReasons.join(', '),
+          });
+          continue;
+        }
+
+        // Delete trip (already releases vehicles/drivers in deleteTrip method)
+        await this.deleteTrip(companyId, id);
+        results.deleted.push({ id, tripCode: trip.tripCode });
+      } catch (error) {
+        results.failed.push({ id, reason: error.message });
+      }
+    }
+
+    return results;
   }
 }

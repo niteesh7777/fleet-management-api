@@ -31,4 +31,12 @@ export const config = {
   accessTokenExpiresIn: process.env.ACCESS_TOKEN_EXPIRES_IN,
   refreshTokenExpiresIn: process.env.REFRESH_TOKEN_EXPIRES_IN,
   nodeEnv: process.env.NODE_ENV || 'development',
+  // Optional configurations (no strict requirement)
+  redisHost: process.env.REDIS_HOST || 'localhost',
+  redisPort: parseInt(process.env.REDIS_PORT, 10) || 6379,
+  redisPassword: process.env.REDIS_PASSWORD,
+  sendgridApiKey: process.env.SENDGRID_API_KEY,
+  emailFrom: process.env.EMAIL_FROM || 'noreply@fleetmanagement.com',
+  emailProvider: process.env.EMAIL_PROVIDER || 'nodemailer',
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173',
 };

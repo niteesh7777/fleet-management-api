@@ -64,3 +64,89 @@ export default class MaintenanceService {
     return deleted;
   }
 }
+
+/**
+ * Check for vehicles due for maintenance
+ * Returns reminders for vehicles that need attention
+ */
+export const checkMaintenanceReminders = async () => {
+  const Vehicle = (await import('../models/Vehicle.js')).default;
+  const Company = (await import('../models/Company.js')).default;
+  const User = (await import('../models/User.js')).default;
+
+  const reminders = [];
+  const now = new Date();
+  const reminderWindow = 7; // days ahead
+
+  // Find all active companies
+  const companies = await Company.find({ status: 'active' });
+
+  for (const company of companies) {
+    // Find vehicles due for maintenance
+    const vehicles = await Vehicle.find({
+      companyId: company._id,
+      status: { $in: ['available', 'in-trip'] },
+      $or: [
+        // Insurance expiring soon
+        {
+          'insurance.expiryDate': {
+            $lte: new Date(now.getTime() + reminderWindow * 24 * 60 * 60 * 1000),
+            $gte: now,
+          },
+        },
+        // Last service over 6 months ago
+        {
+          lastServiceDate: {
+            $lte: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000),
+          },
+        },
+      ],
+    });
+
+    if (vehicles.length === 0) continue;
+
+    // Get company owner
+    const owner = await User.findOne({
+      companyId: company._id,
+      companyRole: 'company_owner',
+    });
+
+    if (!owner) continue;
+
+    for (const vehicle of vehicles) {
+      let maintenanceType = 'General Maintenance';
+      let dueDate = null;
+
+      // Check insurance
+      if (
+        vehicle.insurance?.expiryDate &&
+        new Date(vehicle.insurance.expiryDate) <=
+          new Date(now.getTime() + reminderWindow * 24 * 60 * 60 * 1000)
+      ) {
+        maintenanceType = 'Insurance Renewal';
+        dueDate = vehicle.insurance.expiryDate;
+      }
+      // Check service date
+      else if (
+        vehicle.lastServiceDate &&
+        new Date(vehicle.lastServiceDate) <= new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)
+      ) {
+        maintenanceType = 'Scheduled Service';
+        dueDate = new Date(new Date(vehicle.lastServiceDate).getTime() + 180 * 24 * 60 * 60 * 1000);
+      }
+
+      reminders.push({
+        companyId: company._id,
+        vehicleId: vehicle._id,
+        vehicleNo: vehicle.vehicleNo,
+        maintenanceType,
+        dueDate,
+        currentMileage: vehicle.currentMileage || 0,
+        ownerEmail: owner.email,
+      });
+    }
+  }
+
+  console.log(`✅ Found ${reminders.length} maintenance reminders`);
+  return reminders;
+};

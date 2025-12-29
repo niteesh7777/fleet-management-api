@@ -11,6 +11,8 @@ import {
   updateVehicleStatus,
   checkInsurance,
   assignDriver,
+  getVehicleDependencies,
+  bulkDeleteVehicles,
 } from '../../controllers/vehicle.controller.js';
 import {
   createVehicleSchema,
@@ -49,6 +51,10 @@ router.put(
 );
 
 router.delete('/:id', requireRole(...COMPANY_ADMIN_ROLES), deleteVehicle);
+
+router.post('/bulk-delete', requireRole(...COMPANY_ADMIN_ROLES), bulkDeleteVehicles);
+
+router.get('/:id/dependencies', requireRole(...COMPANY_ADMIN_ROLES), getVehicleDependencies);
 
 router.patch(
   '/:id/status',

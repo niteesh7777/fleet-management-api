@@ -3,6 +3,10 @@ import app from './app.js';
 import { config } from './config/env.js';
 import connectDB, { closeConnection } from './config/db.js';
 import { initializeSocket } from './config/socket.js';
+import { closeQueues } from './config/queue.js';
+
+// Initialize background workers
+import './workers/index.js';
 
 const startServer = async () => {
   try {
@@ -21,6 +25,7 @@ const startServer = async () => {
       console.log('SIGTERM received: closing server');
       server.close(async () => {
         console.log('HTTP server closed');
+        await closeQueues();
         await closeConnection();
         console.log('Mongo connection closed');
         process.exit(0);

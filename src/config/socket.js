@@ -5,7 +5,7 @@ import { config } from './env.js';
 /**
  * Socket.IO Authentication Middleware
  *
- * Validates JWT from socket handshake and extracts company context.
+ * Validates JWT from socket handshake cookies and extracts company context.
  * Critical security: companyId comes from JWT only, never from socket payload.
  *
  * @param {Socket} socket - Socket.IO socket instance
@@ -13,8 +13,26 @@ import { config } from './env.js';
  */
 const socketAuthMiddleware = (socket, next) => {
   try {
-    // Extract token from socket handshake auth
-    const token = socket.handshake.auth.token;
+    // Extract token from cookies (web) or auth object (mobile fallback)
+    const cookies = socket.handshake.headers.cookie;
+    let token = null;
+
+    // Parse cookies to extract accessToken
+    if (cookies) {
+      const cookieArray = cookies.split(';');
+      for (const cookie of cookieArray) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'accessToken') {
+          token = value;
+          break;
+        }
+      }
+    }
+
+    // Fallback to auth.token for mobile clients
+    if (!token) {
+      token = socket.handshake.auth.token;
+    }
 
     if (!token) {
       return next(new Error('Authentication token missing'));

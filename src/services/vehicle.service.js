@@ -190,4 +190,95 @@ export default class VehicleService {
 
     return { vehicle, driver };
   }
+
+  /**
+   * Check dependencies before deleting vehicle
+   * @param {string} companyId - Company ObjectId
+   * @param {string} vehicleId - Vehicle ID
+   * @returns {object} Dependency information
+   */
+  async checkVehicleDependencies(companyId, vehicleId) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    const vehicle = await repo.getByIdAndCompany(vehicleId, companyId);
+    if (!vehicle) throw new AppError('Vehicle not found', 404);
+
+    // Import Trip model to check active trips
+    const Trip = (await import('../models/trip.model.js')).default;
+
+    const activeTrips = await Trip.countDocuments({
+      companyId,
+      vehicleId,
+      status: { $in: ['pending', 'started', 'in-progress'] },
+    });
+
+    const assignedDriversCount = vehicle.assignedDrivers?.length || 0;
+
+    const blockingReasons = [];
+    if (activeTrips > 0) {
+      blockingReasons.push(`Vehicle has ${activeTrips} active trip(s)`);
+    }
+
+    return {
+      activeTrips,
+      assignedDrivers: assignedDriversCount,
+      canDelete: activeTrips === 0,
+      blockingReasons,
+    };
+  }
+
+  /**
+   * Bulk delete vehicles with validation
+   * @param {string} companyId - Company ObjectId
+   * @param {string[]} ids - Array of vehicle IDs
+   * @returns {object} Deletion results
+   */
+  async bulkDeleteVehicles(companyId, ids) {
+    if (!companyId) {
+      throw new AppError('companyId is required', 400);
+    }
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Vehicle IDs array is required', 400);
+    }
+
+    // Verify all vehicles belong to company and check dependencies
+    const results = {
+      deleted: [],
+      failed: [],
+      total: ids.length,
+    };
+
+    for (const id of ids) {
+      try {
+        // Check if vehicle exists and belongs to company
+        const vehicle = await repo.getByIdAndCompany(id, companyId);
+        if (!vehicle) {
+          results.failed.push({ id, reason: 'Vehicle not found' });
+          continue;
+        }
+
+        // Check dependencies
+        const dependencies = await this.checkVehicleDependencies(companyId, id);
+        if (!dependencies.canDelete) {
+          results.failed.push({
+            id,
+            vehicleNo: vehicle.vehicleNo,
+            reason: dependencies.blockingReasons.join(', '),
+          });
+          continue;
+        }
+
+        // Delete vehicle
+        await repo.delete(id);
+        results.deleted.push({ id, vehicleNo: vehicle.vehicleNo });
+      } catch (error) {
+        results.failed.push({ id, reason: error.message });
+      }
+    }
+
+    return results;
+  }
 }

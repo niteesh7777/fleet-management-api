@@ -98,44 +98,24 @@ export default class AuthService {
   }
 
   async login({ email, password, companySlug }) {
-    console.log(`[DEBUG] Login attempt for email: ${email}, companySlug: ${companySlug}`);
-
     // Step 1: Resolve company by slug
     const company = await companyRepo.findBySlug(companySlug);
     if (!company) {
       throw new AppError('Invalid company slug', 400);
     }
 
-    console.log(`[DEBUG] Company found: ${company.name} (${company._id})`);
-
     // Step 2: Find user by email AND companyId (tenant-scoped lookup)
     const user = await userRepo.findByEmailAndCompany(company._id, email);
-    console.log(`[DEBUG] User found by email in company: ${!!user}`);
 
     if (!user) {
       throw new AppError('Invalid email or password', 400); // Generic message for security
     }
 
-    console.log(`[DEBUG] passwordHash exists on user: ${!!user.passwordHash}`);
-    if (user.passwordHash) {
-      console.log(`[DEBUG] passwordHash length: ${user.passwordHash.length}`);
-      console.log(`[DEBUG] passwordHash starts with: ${user.passwordHash.substring(0, 10)}...`);
-    }
-
     const ok = await argon2.verify(user.passwordHash, password);
-    console.log(`[DEBUG] argon2.verify result: ${ok}`);
 
     if (!ok) {
       throw new AppError('Invalid email or password', 400); // Generic message for security
     }
-
-    console.log(`[DEBUG] User object before token generation:`, {
-      _id: user._id,
-      email: user.email,
-      companyId: user.companyId,
-      companyRole: user.companyRole,
-      platformRole: user.platformRole,
-    });
 
     const jti = uuidv4();
     const accessToken = generateAccessToken(user); // embed minimal claims
@@ -181,8 +161,8 @@ export default class AuthService {
     };
   }
 
-  async logout(userId) {
-    await userRepo.clearRefreshToken(userId);
+  async logout(userId, companyId) {
+    await userRepo.clearRefreshToken(userId, companyId);
   }
 
   async refresh(refreshToken) {

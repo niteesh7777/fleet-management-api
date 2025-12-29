@@ -180,3 +180,45 @@ export const assignDriver = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getVehicleDependencies = async (req, res, next) => {
+  try {
+    const dependencies = await service.checkVehicleDependencies(req.user.companyId, req.params.id);
+
+    return success(res, 'Dependencies checked successfully', { dependencies });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkDeleteVehicles = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Vehicle IDs array is required', 400);
+    }
+
+    const results = await service.bulkDeleteVehicles(req.user.companyId, ids);
+
+    // Audit log for each successfully deleted vehicle
+    const userId = req.user?.id || req.user?._id;
+    for (const deleted of results.deleted) {
+      await AuditService.log({
+        action: 'vehicle_bulk_deletion',
+        entityType: 'vehicle',
+        entityId: deleted.id,
+        userId,
+        metadata: {
+          deletedBy: userId,
+          vehicleNo: deleted.vehicleNo,
+          bulkOperation: true,
+        },
+      });
+    }
+
+    return success(res, 'Bulk delete completed', { results });
+  } catch (err) {
+    next(err);
+  }
+};

@@ -5,13 +5,21 @@ import AppError from '../utils/appError.js';
 import { config } from '../config/env.js';
 
 const service = new AuthService();
-const COOKIE_NAME = 'refreshToken';
+const REFRESH_COOKIE_NAME = 'refreshToken';
+const ACCESS_COOKIE_NAME = 'accessToken';
 
-const cookieOptions = {
+const refreshCookieOptions = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
   sameSite: 'lax',
-  maxAge: 7 * 24 * 60 * 60 * 1000,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
+
+const accessCookieOptions = {
+  httpOnly: true,
+  secure: config.nodeEnv === 'production',
+  sameSite: 'lax',
+  maxAge: 15 * 60 * 1000, // 15 minutes
 };
 
 /**
@@ -31,8 +39,9 @@ export const platformSignup = async (req, res, next) => {
   try {
     const { user, company, accessToken, refreshToken } = await service.platformSignup(req.body);
 
-    // Set refresh token cookie (for web clients)
-    res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
+    // Set tokens in httpOnly cookies
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOptions);
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions);
 
     return success(
       res,
@@ -40,8 +49,9 @@ export const platformSignup = async (req, res, next) => {
       {
         user,
         company,
+        // Tokens also returned for mobile clients that can't use cookies
         accessToken,
-        refreshToken, // Also return in body for mobile clients
+        refreshToken,
       },
       201
     );
@@ -61,15 +71,15 @@ export const register = async (req, res, next) => {
 
 export const login = async (req, res, next) => {
   try {
-    console.log('[AUTH] Login request body:', JSON.stringify(req.body, null, 2));
     const { user, accessToken, refreshToken } = await service.login(req.body);
 
-    res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
+    // Set tokens in httpOnly cookies (secure against XSS)
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOptions);
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions);
 
-    // Also return refreshToken in body for mobile apps that can't use cookies
+    // Also return tokens in body for mobile apps that can't use cookies
     return success(res, 'Login successful', { user, accessToken, refreshToken });
   } catch (err) {
-    console.log('[AUTH] Login error:', err.message);
     return next(err);
   }
 };
@@ -77,13 +87,14 @@ export const login = async (req, res, next) => {
 export const refresh = async (req, res, next) => {
   try {
     // Support both cookie-based (web) and body-based (mobile) refresh tokens
-    const token = req.cookies[COOKIE_NAME] || req.body.refreshToken;
+    const token = req.cookies[REFRESH_COOKIE_NAME] || req.body.refreshToken;
     if (!token) throw new AppError('No refresh token provided', 401);
 
     const { accessToken, refreshToken } = await service.refresh(token);
 
-    // Rotate refresh token
-    res.cookie(COOKIE_NAME, refreshToken, cookieOptions);
+    // Set new tokens in httpOnly cookies
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, accessCookieOptions);
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions);
 
     // Return both tokens for mobile apps
     return success(res, 'Token refreshed', { accessToken, refreshToken });
@@ -94,28 +105,27 @@ export const refresh = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    const token = req.cookies[COOKIE_NAME];
+    const token = req.cookies[REFRESH_COOKIE_NAME];
 
-    // Clear cookie immediately
-    res.clearCookie(COOKIE_NAME, {
+    // Clear both cookies immediately
+    const clearOptions = {
       httpOnly: true,
       sameSite: 'lax',
       secure: config.nodeEnv === 'production',
-    });
+    };
+    res.clearCookie(ACCESS_COOKIE_NAME, clearOptions);
+    res.clearCookie(REFRESH_COOKIE_NAME, clearOptions);
 
-    if (!token) return success(res, 'Logged out', {}, 200);
+    // Get user info from authenticated request (set by requireAuth middleware)
+    const userId = req.user?.id;
+    const companyId = req.user?.companyId;
 
-    // Verify refresh token to find user ID
-    let payload = null;
-    try {
-      payload = jwt.verify(token, config.refreshTokenSecret);
-    } catch (e) {
-      payload = null;
+    if (!userId || !companyId) {
+      return success(res, 'Logged out', {}, 200);
     }
 
-    if (payload?.id) {
-      await service.logout(payload.id);
-    }
+    // Clear refresh token from database
+    await service.logout(userId, companyId);
 
     return success(res, 'Logged out successfully');
   } catch (err) {

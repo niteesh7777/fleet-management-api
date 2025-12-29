@@ -11,6 +11,8 @@ import {
   deactivateDriver,
   updateDriverLocation,
   getMyProfile,
+  getDriverDependencies,
+  bulkDeleteDrivers,
 } from '../../controllers/driver.controller.js';
 import {
   createDriverCompositeSchema,
@@ -59,6 +61,13 @@ router.put(
   updateDriver
 );
 router.delete('/:id', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), deleteDriver);
+router.post('/bulk-delete', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), bulkDeleteDrivers);
+router.get(
+  '/:id/dependencies',
+  requireAuth(),
+  requireRole(...COMPANY_ADMIN_ROLES),
+  getDriverDependencies
+);
 router.put('/:id/deactivate', requireAuth(), requireRole(...COMPANY_ADMIN_ROLES), deactivateDriver);
 
 export default router;

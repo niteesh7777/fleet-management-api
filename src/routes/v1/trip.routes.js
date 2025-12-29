@@ -11,6 +11,8 @@ import {
   completeTrip,
   getMyTrips,
   getAvailableResources,
+  getTripDependencies,
+  bulkDeleteTrips,
 } from '../../controllers/trip.controller.js';
 import {
   createTripSchema,
@@ -48,6 +50,10 @@ router.get('/:id', getTripById); // Drivers might need to see trip details
 router.put('/:id', requireRole(...COMPANY_ADMIN_ROLES), validate(updateTripSchema), updateTrip);
 
 router.delete('/:id', requireRole(...COMPANY_ADMIN_ROLES), deleteTrip);
+
+router.post('/bulk-delete', requireRole(...COMPANY_ADMIN_ROLES), bulkDeleteTrips);
+
+router.get('/:id/dependencies', requireRole(...COMPANY_ADMIN_ROLES), getTripDependencies);
 
 router.post(
   '/:id/progress',

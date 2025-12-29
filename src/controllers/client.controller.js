@@ -80,3 +80,29 @@ export const deleteClient = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getClientDependencies = async (req, res, next) => {
+  try {
+    const dependencies = await service.checkClientDependencies(req.user.companyId, req.params.id);
+
+    return success(res, 'Dependencies checked successfully', { dependencies });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const bulkDeleteClients = async (req, res, next) => {
+  try {
+    const { ids } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new AppError('Client IDs array is required', 400);
+    }
+
+    const results = await service.bulkDeleteClients(req.user.companyId, ids);
+
+    return success(res, 'Bulk delete completed', { results });
+  } catch (err) {
+    next(err);
+  }
+};
