@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import AuthService from '../services/auth.service.js';
 import { success } from '../utils/response.utils.js';
 import AppError from '../utils/appError.js';
@@ -87,8 +86,6 @@ export const refresh = async (req, res, next) => {
 
 export const logout = async (req, res, next) => {
   try {
-    const token = req.cookies[REFRESH_COOKIE_NAME];
-
     const clearOptions = {
       httpOnly: true,
       sameSite: config.nodeEnv === 'production' ? 'none' : 'lax',
