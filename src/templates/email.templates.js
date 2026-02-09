@@ -1,5 +1,5 @@
 export const emailTemplates = {
-  // Welcome email for new company signup
+
   welcome: (data) => ({
     subject: `Welcome to Fleet Management - ${data.companyName}`,
     html: `
