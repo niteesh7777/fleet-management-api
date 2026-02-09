@@ -19,7 +19,7 @@ const router = express.Router();
 // Apply authentication to all routes
 router.use(requireAuth());
 
-router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createRouteSchema), createRoute);
+router.post('/', validate(createRouteSchema), createRoute); // Allow authenticated users to create routes for trip planning
 router.get('/', requireRole(...COMPANY_ADMIN_ROLES), getAllRoutes);
 router.get(
   '/paginated',

@@ -118,19 +118,7 @@ export default class DriverRepository extends TenantRepository {
       throw new Error('companyId is required');
     }
 
-    const driver = await super
-      .updateByIdAndCompany(driverId, companyId, updateData)
-      .populate('userId', 'name email platformRole companyRole')
-      .populate('assignedVehicle', 'vehicleNo model type status')
-      .populate('activeTripId', 'tripCode status');
-
-    if (!driver) return null;
-
-    // Transform userId to user for API compatibility
-    const driverObj = driver.toObject();
-    driverObj.user = driverObj.userId;
-    delete driverObj.userId;
-    return driverObj;
+    return await super.updateByIdAndCompany(driverId, companyId, updateData);
   }
 
   /**

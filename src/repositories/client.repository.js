@@ -107,4 +107,22 @@ export default class ClientRepository extends TenantRepository {
     }
     return await super.deleteByIdAndCompany(clientId, companyId);
   }
+
+  /**
+   * Find client by name (global - not company-specific)
+   * @param {String} name - Client name
+   * @returns {Promise<Object|null>}
+   */
+  async findByName(name) {
+    return await this.Model.findOne({ name });
+  }
+
+  /**
+   * Find client by GST number (global - not company-specific)
+   * @param {String} gstNo - GST number
+   * @returns {Promise<Object|null>}
+   */
+  async findByGST(gstNo) {
+    return await this.Model.findOne({ gstNo });
+  }
 }

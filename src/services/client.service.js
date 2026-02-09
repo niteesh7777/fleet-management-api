@@ -33,7 +33,9 @@ export default class ClientService {
       if (existingByGST) throw new AppError('Client with this GST already exists', 400);
     }
 
-    const client = await repo.create(data);
+    // Extract companyId and create client
+    const { companyId, ...clientData } = data;
+    const client = await repo.create(companyId, clientData);
     return client;
   }
 
@@ -51,20 +53,26 @@ export default class ClientService {
     return await repo.getAllByCompanyPaginated(companyId, filter, paginationOptions);
   }
 
-  async getClientById(id) {
-    const client = await repo.findById(id);
+  async getClientById(id, companyId) {
+    const client = await repo.findByIdAndCompany(id, companyId);
     if (!client) throw new AppError('Client not found', 404);
     return client;
   }
 
-  async updateClient(id, updateData) {
-    const updated = await repo.update(id, updateData);
+  async updateClient(id, companyId, updateData) {
+    const client = await repo.findByIdAndCompany(id, companyId);
+    if (!client) throw new AppError('Client not found', 404);
+
+    const updated = await repo.updateByIdAndCompany(id, companyId, updateData);
     if (!updated) throw new AppError('Client not found', 404);
     return updated;
   }
 
-  async deleteClient(id) {
-    const deleted = await repo.delete(id);
+  async deleteClient(id, companyId) {
+    const client = await repo.findByIdAndCompany(id, companyId);
+    if (!client) throw new AppError('Client not found', 404);
+
+    const deleted = await repo.deleteByIdAndCompany(id, companyId);
     if (!deleted) throw new AppError('Client not found', 404);
     return deleted;
   }
@@ -89,7 +97,7 @@ export default class ClientService {
     }
 
     // Import Trip model
-    const Trip = (await import('../models/trip.model.js')).default;
+    const Trip = (await import('../models/Trip.js')).default;
 
     const activeTrips = await Trip.countDocuments({
       companyId,

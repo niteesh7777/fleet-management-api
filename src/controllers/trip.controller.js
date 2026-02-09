@@ -16,6 +16,7 @@ export const createTrip = async (req, res, next) => {
       entityType: 'trip',
       entityId: trip._id,
       userId: creatorId,
+      companyId: req.user.companyId,
       newValue: req.body,
       metadata: { createdBy: creatorId, tripCode: trip.tripCode },
     });
@@ -162,6 +163,7 @@ export const deleteTrip = async (req, res, next) => {
       entityType: 'trip',
       entityId: req.params.id,
       userId: deleterId,
+      companyId: req.user.companyId,
       oldValue: {
         tripCode: tripToDelete.tripCode,
         status: tripToDelete.status,
@@ -237,10 +239,11 @@ export const bulkDeleteTrips = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
     for (const deleted of results.deleted) {
       await AuditService.log({
-        action: 'trip_bulk_deletion',
+        action: 'trip_deletion',
         entityType: 'trip',
         entityId: deleted.id,
         userId,
+        companyId: req.user.companyId,
         metadata: {
           deletedBy: userId,
           tripCode: deleted.tripCode,

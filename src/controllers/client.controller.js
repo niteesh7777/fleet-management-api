@@ -7,7 +7,7 @@ const service = new ClientService();
 
 export const createClient = async (req, res, next) => {
   try {
-    const client = await service.createClient(req.body);
+    const client = await service.createClient({ ...req.body, companyId: req.user.companyId });
     return success(res, 'Client created successfully', { client }, 201);
   } catch (err) {
     next(err);
@@ -56,7 +56,7 @@ export const getClientsPaginated = async (req, res, next) => {
 
 export const getClientById = async (req, res, next) => {
   try {
-    const client = await service.getClientById(req.params.id);
+    const client = await service.getClientById(req.params.id, req.user.companyId);
     return success(res, 'Client fetched successfully', { client });
   } catch (err) {
     next(err);
@@ -65,7 +65,7 @@ export const getClientById = async (req, res, next) => {
 
 export const updateClient = async (req, res, next) => {
   try {
-    const client = await service.updateClient(req.params.id, req.body);
+    const client = await service.updateClient(req.params.id, req.user.companyId, req.body);
     return success(res, 'Client updated successfully', { client });
   } catch (err) {
     next(err);
@@ -74,7 +74,7 @@ export const updateClient = async (req, res, next) => {
 
 export const deleteClient = async (req, res, next) => {
   try {
-    const client = await service.deleteClient(req.params.id);
+    const client = await service.deleteClient(req.params.id, req.user.companyId);
     return success(res, 'Client deleted successfully', { client });
   } catch (err) {
     next(err);

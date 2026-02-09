@@ -35,7 +35,7 @@ router.get('/my', requireRole(...COMPANY_DRIVER_ROLES), getMyTrips);
 router.get('/available-resources', requireRole(...COMPANY_ADMIN_ROLES), getAvailableResources);
 
 // ADMIN ENDPOINTS
-router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createTripSchema), createTrip);
+router.post('/', validate(createTripSchema), createTrip); // Allow authenticated users to create trips
 
 // Get all trips with pagination (supports filters: status, clientId, routeId, startDate, endDate, search)
 router.get(

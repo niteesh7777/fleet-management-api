@@ -16,6 +16,7 @@ export const createVehicle = async (req, res, next) => {
       entityType: 'vehicle',
       entityId: vehicle._id,
       userId: creatorId,
+      companyId: req.user.companyId,
       newValue: req.body,
       metadata: { createdBy: creatorId },
     });
@@ -52,6 +53,11 @@ export const getVehiclesPaginated = async (req, res, next) => {
     // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
+    }
+
+    // Add type filter
+    if (req.query.type) {
+      filter.type = req.query.type;
     }
 
     const { vehicles, total } = await service.getVehiclesPaginated(req.user.companyId, filter, {
@@ -117,6 +123,7 @@ export const deleteVehicle = async (req, res, next) => {
       entityType: 'vehicle',
       entityId: req.params.id,
       userId: deleterId,
+      companyId: req.user.companyId,
       oldValue: {
         vehicleNo: vehicleToDelete.vehicleNo,
         model: vehicleToDelete.model,
@@ -205,10 +212,11 @@ export const bulkDeleteVehicles = async (req, res, next) => {
     const userId = req.user?.id || req.user?._id;
     for (const deleted of results.deleted) {
       await AuditService.log({
-        action: 'vehicle_bulk_deletion',
+        action: 'vehicle_deletion',
         entityType: 'vehicle',
         entityId: deleted.id,
         userId,
+        companyId: req.user.companyId,
         metadata: {
           deletedBy: userId,
           vehicleNo: deleted.vehicleNo,
