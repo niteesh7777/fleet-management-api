@@ -11,7 +11,7 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = ['http://localhost:5173', 'https://fleet-frontend-olive.vercel.app'];
 
 app.use(
   cors({
