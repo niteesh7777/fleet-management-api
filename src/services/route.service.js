@@ -1,4 +1,3 @@
-// src/services/route.service.js
 import RouteRepository from '../repositories/route.repository.js';
 import AppError from '../utils/appError.js';
 
@@ -10,7 +9,6 @@ export default class RouteService {
       throw new AppError('companyId is required', 400);
     }
 
-    // Auto-generate name if not provided
     if (!data.name && data.source?.name && data.destination?.name) {
       data.name = `${data.source.name} → ${data.destination.name}`;
     }

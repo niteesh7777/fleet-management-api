@@ -1,4 +1,3 @@
-// src/services/client.service.js
 import ClientRepository from '../repositories/client.repository.js';
 import AppError from '../utils/appError.js';
 import CompanyRepository from '../repositories/company.repository.js';
@@ -8,23 +7,17 @@ const repo = new ClientRepository();
 const companyRepo = new CompanyRepository();
 
 export default class ClientService {
-  /**
-   * Create a new client with plan limit validation
-   * @param {object} data - Client data including companyId
-   * @throws {AppError} If plan limit exceeded or company suspended
-   */
+
   async createClient(data) {
-    // Validate plan limits before creating client
+
     const company = await companyRepo.findById(data.companyId);
     if (!company) {
       throw new AppError('Company not found', 404);
     }
 
-    // Check company status and client limit
     const currentClientCount = await repo.countByCompany(data.companyId);
     validateClientsLimit(company, currentClientCount);
 
-    // Check for duplicate name or GST number
     const existingByName = await repo.findByName(data.name);
     if (existingByName) throw new AppError('Client name already exists', 400);
 
@@ -33,7 +26,6 @@ export default class ClientService {
       if (existingByGST) throw new AppError('Client with this GST already exists', 400);
     }
 
-    // Extract companyId and create client
     const { companyId, ...clientData } = data;
     const client = await repo.create(companyId, clientData);
     return client;
@@ -77,12 +69,6 @@ export default class ClientService {
     return deleted;
   }
 
-  /**
-   * Check dependencies before deleting client
-   * @param {string} companyId - Company ObjectId
-   * @param {string} clientId - Client ID
-   * @returns {object} Dependency information
-   */
   async checkClientDependencies(companyId, clientId) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -91,12 +77,10 @@ export default class ClientService {
     const client = await repo.findById(clientId);
     if (!client) throw new AppError('Client not found', 404);
 
-    // Check if client belongs to company
     if (client.companyId.toString() !== companyId.toString()) {
       throw new AppError('Client not found', 404);
     }
 
-    // Import Trip model
     const Trip = (await import('../models/Trip.js')).default;
 
     const activeTrips = await Trip.countDocuments({
@@ -124,12 +108,6 @@ export default class ClientService {
     };
   }
 
-  /**
-   * Bulk delete clients with validation
-   * @param {string} companyId - Company ObjectId
-   * @param {string[]} ids - Array of client IDs
-   * @returns {object} Deletion results
-   */
   async bulkDeleteClients(companyId, ids) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -153,13 +131,11 @@ export default class ClientService {
           continue;
         }
 
-        // Verify client belongs to company
         if (client.companyId.toString() !== companyId.toString()) {
           results.failed.push({ id, reason: 'Client not found' });
           continue;
         }
 
-        // Check dependencies
         const dependencies = await this.checkClientDependencies(companyId, id);
         if (!dependencies.canDelete) {
           results.failed.push({
@@ -170,7 +146,6 @@ export default class ClientService {
           continue;
         }
 
-        // Delete client
         await repo.delete(id);
         results.deleted.push({ id, name: client.name });
       } catch (error) {

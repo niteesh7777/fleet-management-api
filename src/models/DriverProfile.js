@@ -18,7 +18,7 @@ const driverProfileSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
 
     contact: {
@@ -76,7 +76,6 @@ driverProfileSchema.virtual('user', {
   justOne: true,
 });
 
-// Compound unique indexes: scoped by company
 driverProfileSchema.index({ companyId: 1, licenseNo: 1 }, { unique: true });
 driverProfileSchema.index({ companyId: 1, userId: 1 }, { unique: true });
 driverProfileSchema.index({ companyId: 1, status: 1 });

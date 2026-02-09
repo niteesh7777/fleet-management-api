@@ -8,7 +8,6 @@ import { OWNER_ADMIN_ROLES } from '../../constants/roleGroups.js';
 const router = express.Router();
 const repo = new UserRepository();
 
-// For any authenticated user (driver or admin)
 router.get('/me', requireAuth(), async (req, res, next) => {
   try {
     const user = await repo.findById(req.user.id);
@@ -27,7 +26,6 @@ router.get('/me', requireAuth(), async (req, res, next) => {
   }
 });
 
-// For admin only
 router.get('/admin', requireAuth(), requireRole(...OWNER_ADMIN_ROLES), (req, res) => {
   return success(res, 'Welcome Admin, you have access to this route', {
     user: req.user,

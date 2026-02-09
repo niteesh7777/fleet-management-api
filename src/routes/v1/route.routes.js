@@ -16,10 +16,9 @@ import { COMPANY_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
 router.use(requireAuth());
 
-router.post('/', validate(createRouteSchema), createRoute); // Allow authenticated users to create routes for trip planning
+router.post('/', validate(createRouteSchema), createRoute);
 router.get('/', requireRole(...COMPANY_ADMIN_ROLES), getAllRoutes);
 router.get(
   '/paginated',
@@ -27,7 +26,7 @@ router.get(
   pagination({ defaultLimit: 10, maxLimit: 100 }),
   getRoutesPaginated
 );
-router.get('/:id', getRouteById); // Drivers might need to see route details
+router.get('/:id', getRouteById);
 router.put('/:id', requireRole(...COMPANY_ADMIN_ROLES), validate(updateRouteSchema), updateRoute);
 router.delete('/:id', requireRole(...COMPANY_ADMIN_ROLES), deleteRoute);
 

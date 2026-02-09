@@ -1,6 +1,5 @@
 import AppError from '../utils/appError.js';
 
-// Hardcoded roles for now - can be moved to database later if needed
 const roles = [
   {
     _id: 'admin',
@@ -72,7 +71,6 @@ export const updateRole = async (req, res, next) => {
       throw new AppError('Role not found', 404);
     }
 
-    // Update the role (in a real app, this would be saved to database)
     roles[roleIndex] = {
       ...roles[roleIndex],
       name: name || roles[roleIndex].name,

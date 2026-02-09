@@ -1,8 +1,3 @@
-/**
- * Subscription Service
- * Handles subscription management, quota tracking, and plan-related operations
- */
-
 import CompanyRepository from '../repositories/company.repository.js';
 import VehicleRepository from '../repositories/vehicle.repository.js';
 import DriverRepository from '../repositories/driver.repository.js';
@@ -24,18 +19,13 @@ const userRepo = new UserRepository();
 const clientRepo = new ClientRepository();
 
 export default class SubscriptionService {
-  /**
-   * Get company usage summary and quota information
-   * @param {string} companyId - Company ID
-   * @returns {object} Usage summary with quotas
-   */
+
   async getUsageSummary(companyId) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
       throw new AppError('Company not found', 404);
     }
 
-    // Get current resource counts
     const vehicleCount = await vehicleRepo.countByCompany(companyId);
     const driverCount = await driverRepo.countByCompany(companyId);
     const userCount = await userRepo.countByCompany(companyId);
@@ -49,15 +39,8 @@ export default class SubscriptionService {
     });
   }
 
-  /**
-   * Upgrade company plan
-   * @param {string} companyId - Company ID
-   * @param {string} newPlan - New plan type
-   * @param {object} options - Additional options (billingCycle, etc.)
-   * @returns {object} Updated company
-   */
   async upgradePlan(companyId, newPlan, options = {}) {
-    // Validate new plan
+
     if (!Object.values(PLAN_TYPES).includes(newPlan)) {
       throw new AppError('Invalid plan type', 400);
     }
@@ -67,13 +50,11 @@ export default class SubscriptionService {
       throw new AppError('Company not found', 404);
     }
 
-    // Don't allow downgrading via this method
     const planRank = { free: 0, starter: 1, professional: 2, enterprise: 3 };
     if (planRank[newPlan] < planRank[company.plan]) {
       throw new AppError('Plan downgrade not allowed. Contact support.', 400);
     }
 
-    // Update company plan
     const updated = await companyRepo.updateById(companyId, {
       plan: newPlan,
       lastPlanChangeDate: new Date(),
@@ -86,12 +67,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Suspend a company
-   * @param {string} companyId - Company ID
-   * @param {string} reason - Reason for suspension
-   * @returns {object} Updated company
-   */
   async suspendCompany(companyId, reason = 'Suspended by administrator') {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -114,11 +89,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Reactivate a suspended company
-   * @param {string} companyId - Company ID
-   * @returns {object} Updated company
-   */
   async reactivateCompany(companyId) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -141,12 +111,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Check if a feature is available for the company
-   * @param {string} companyId - Company ID
-   * @param {string} feature - Feature name
-   * @returns {object} Feature availability details
-   */
   async checkFeature(companyId, feature) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -166,10 +130,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Get plan comparison
-   * @returns {object} All plans with their features and limits
-   */
   getPlanComparison() {
     const plans = {};
     Object.entries(PLAN_TYPES).forEach(([, planType]) => {
@@ -191,11 +151,6 @@ export default class SubscriptionService {
     return plans;
   }
 
-  /**
-   * Estimate usage for the next period
-   * @param {string} companyId - Company ID
-   * @returns {object} Estimated usage
-   */
   async estimateUsage(companyId) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -204,8 +159,7 @@ export default class SubscriptionService {
 
     const summary = await this.getUsageSummary(companyId);
 
-    // Calculate estimated next month usage (simplified estimation)
-    const estimatedMultiplier = 1.2; // Assume 20% growth
+    const estimatedMultiplier = 1.2;
 
     return {
       current: summary.resources,
@@ -224,10 +178,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Recommend a plan based on current usage
-   * @private
-   */
   _recommendPlan(currentUsage, estimatedVehicles, estimatedDrivers, estimatedUsers) {
     const plans = Object.values(PLAN_TYPES);
 
@@ -246,7 +196,6 @@ export default class SubscriptionService {
       }
     }
 
-    // If nothing fits, recommend enterprise
     return {
       plan: PLAN_TYPES.ENTERPRISE,
       planName: 'Enterprise Plan',
@@ -254,11 +203,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Get billing information for a company
-   * @param {string} companyId - Company ID
-   * @returns {object} Billing details
-   */
   async getBillingInfo(companyId) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -290,12 +234,6 @@ export default class SubscriptionService {
     };
   }
 
-  /**
-   * Update billing email
-   * @param {string} companyId - Company ID
-   * @param {string} billingEmail - New billing email
-   * @returns {object} Updated company
-   */
   async updateBillingEmail(companyId, billingEmail) {
     const company = await companyRepo.findById(companyId);
     if (!company) {
@@ -309,11 +247,6 @@ export default class SubscriptionService {
     return updated;
   }
 
-  /**
-   * Get subscription history/events
-   * @param {string} companyId - Company ID
-   * @returns {object} Subscription history
-   */
   async getSubscriptionHistory(companyId) {
     const company = await companyRepo.findById(companyId);
     if (!company) {

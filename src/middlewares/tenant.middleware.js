@@ -1,18 +1,9 @@
 import AppError from '../utils/appError.js';
 
-/**
- * Tenant Isolation Middleware
- * Ensures all protected resources are accessed within the user's company boundary.
- *
- * Usage:
- * - Apply to all protected routes after requireAuth()
- * - Validates that req.user.companyId is set
- * - Ready to validate resource ownership in controllers
- */
 export const requireTenantAccess = () => {
   return (req, res, next) => {
     try {
-      // Verify user is authenticated with tenant context
+
       if (!req.user) {
         return next(new AppError('Not authenticated', 401));
       }
@@ -21,7 +12,6 @@ export const requireTenantAccess = () => {
         return next(new AppError('Invalid request: missing tenant context', 400));
       }
 
-      // Store companyId in request for easy access by downstream handlers
       req.companyId = req.user.companyId;
 
       next();
@@ -31,19 +21,6 @@ export const requireTenantAccess = () => {
   };
 };
 
-/**
- * Validate Resource Ownership
- * Call this in controllers to verify a resource belongs to the user's company.
- *
- * Usage:
- * const vehicle = await vehicleService.getById(req.params.vehicleId);
- * validateResourceOwnership(vehicle, req.user.companyId, 'Vehicle');
- *
- * @param {Object} resource - The database resource being accessed
- * @param {String} userCompanyId - The authenticated user's companyId
- * @param {String} resourceType - Name of the resource type (for error message)
- * @throws {AppError} If resource does not belong to user's company
- */
 export const validateResourceOwnership = (resource, userCompanyId, resourceType = 'Resource') => {
   if (!resource) {
     throw new AppError(`${resourceType} not found`, 404);
@@ -58,14 +35,6 @@ export const validateResourceOwnership = (resource, userCompanyId, resourceType 
   }
 };
 
-/**
- * Validate Multiple Resources Ownership
- * Useful for bulk operations where multiple resources must belong to the same company.
- *
- * @param {Array} resources - Array of database resources
- * @param {String} userCompanyId - The authenticated user's companyId
- * @param {String} resourceType - Name of the resource type
- */
 export const validateBulkResourceOwnership = (
   resources,
   userCompanyId,

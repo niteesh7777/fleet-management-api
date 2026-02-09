@@ -30,7 +30,6 @@ export const getMaintenancePaginated = async (req, res, next) => {
     const { companyId } = req.user;
     const filter = {};
 
-    // Add search functionality
     if (req.query.search) {
       filter.$or = [
         { description: { $regex: req.query.search, $options: 'i' } },
@@ -38,17 +37,14 @@ export const getMaintenancePaginated = async (req, res, next) => {
       ];
     }
 
-    // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
     }
 
-    // Add vehicle filter
     if (req.query.vehicleId) {
       filter.vehicleId = req.query.vehicleId;
     }
 
-    // Add service type filter
     if (req.query.serviceType) {
       filter.serviceType = req.query.serviceType;
     }

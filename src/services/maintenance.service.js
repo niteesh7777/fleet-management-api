@@ -1,4 +1,3 @@
-// src/services/maintenance.service.js
 import MaintenanceRepository from '../repositories/maintenance.repository.js';
 import VehicleRepository from '../repositories/vehicle.repository.js';
 import AppError from '../utils/appError.js';
@@ -11,7 +10,6 @@ export default class MaintenanceService {
     if (!companyId) throw new AppError('Company context required', 400);
     if (!userId) throw new AppError('User context required', 400);
 
-    // Ensure vehicle belongs to the company
     const vehicle = await vehicleRepo.getByIdAndCompany(data.vehicleId, companyId);
     if (!vehicle) throw new AppError('Vehicle not found', 404);
 
@@ -20,7 +18,6 @@ export default class MaintenanceService {
       createdBy: userId,
     });
 
-    // Update vehicle status to 'maintenance'
     await vehicleRepo.updateByIdAndCompany(vehicle._id, companyId, {
       status: 'maintenance',
     });
@@ -65,10 +62,6 @@ export default class MaintenanceService {
   }
 }
 
-/**
- * Check for vehicles due for maintenance
- * Returns reminders for vehicles that need attention
- */
 export const checkMaintenanceReminders = async () => {
   const Vehicle = (await import('../models/Vehicle.js')).default;
   const Company = (await import('../models/Company.js')).default;
@@ -76,25 +69,24 @@ export const checkMaintenanceReminders = async () => {
 
   const reminders = [];
   const now = new Date();
-  const reminderWindow = 7; // days ahead
+  const reminderWindow = 7;
 
-  // Find all active companies
   const companies = await Company.find({ status: 'active' });
 
   for (const company of companies) {
-    // Find vehicles due for maintenance
+
     const vehicles = await Vehicle.find({
       companyId: company._id,
       status: { $in: ['available', 'in-trip'] },
       $or: [
-        // Insurance expiring soon
+
         {
           'insurance.expiryDate': {
             $lte: new Date(now.getTime() + reminderWindow * 24 * 60 * 60 * 1000),
             $gte: now,
           },
         },
-        // Last service over 6 months ago
+
         {
           lastServiceDate: {
             $lte: new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000),
@@ -105,7 +97,6 @@ export const checkMaintenanceReminders = async () => {
 
     if (vehicles.length === 0) continue;
 
-    // Get company owner
     const owner = await User.findOne({
       companyId: company._id,
       companyRole: 'company_owner',
@@ -117,7 +108,6 @@ export const checkMaintenanceReminders = async () => {
       let maintenanceType = 'General Maintenance';
       let dueDate = null;
 
-      // Check insurance
       if (
         vehicle.insurance?.expiryDate &&
         new Date(vehicle.insurance.expiryDate) <=
@@ -126,7 +116,7 @@ export const checkMaintenanceReminders = async () => {
         maintenanceType = 'Insurance Renewal';
         dueDate = vehicle.insurance.expiryDate;
       }
-      // Check service date
+
       else if (
         vehicle.lastServiceDate &&
         new Date(vehicle.lastServiceDate) <= new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000)

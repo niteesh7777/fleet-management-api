@@ -1,13 +1,11 @@
-// src/validations/driver.validation.js
 import Joi from 'joi';
 
 export const createDriverCompositeSchema = Joi.object({
-  // user creation fields
+
   name: Joi.string().min(2).max(100).required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
 
-  // driver profile fields
   licenseNo: Joi.string().required(),
   phone: Joi.string()
     .pattern(/^\+?[0-9]{10,14}$/)

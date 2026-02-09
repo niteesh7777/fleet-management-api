@@ -5,7 +5,6 @@ export const requireRole = (...roles) => {
     try {
       if (!req.user) return next(new AppError('Not authenticated', 401));
 
-      // Support both platformRole and companyRole checks
       const userRoles = [req.user.platformRole, req.user.companyRole].filter(Boolean);
 
       if (!userRoles.some((role) => roles.includes(role))) {

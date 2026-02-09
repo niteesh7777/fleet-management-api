@@ -6,12 +6,6 @@ export default class ClientRepository extends TenantRepository {
     super(Client);
   }
 
-  /**
-   * Get all clients for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @returns {Promise<Array>}
-   */
   async getAllByCompany(companyId, filter = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -22,13 +16,6 @@ export default class ClientRepository extends TenantRepository {
     });
   }
 
-  /**
-   * Get paginated clients for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @param {Object} options - { skip, limit, sort }
-   * @returns {Promise<{clients: Array, total: Number}>}
-   */
   async getAllByCompanyPaginated(companyId, filter = {}, options = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -52,12 +39,6 @@ export default class ClientRepository extends TenantRepository {
     return { clients, total };
   }
 
-  /**
-   * Find client by ID for a company
-   * @param {String} clientId - Client ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async getByIdAndCompany(clientId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -68,12 +49,6 @@ export default class ClientRepository extends TenantRepository {
     });
   }
 
-  /**
-   * Create client for company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} data - Client data
-   * @returns {Promise<Object>}
-   */
   async createForCompany(companyId, data) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -81,13 +56,6 @@ export default class ClientRepository extends TenantRepository {
     return await this.create(companyId, data);
   }
 
-  /**
-   * Update client for company
-   * @param {String} clientId - Client ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} updateData - Fields to update
-   * @returns {Promise<Object|null>}
-   */
   async updateByIdAndCompany(clientId, companyId, updateData) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -95,12 +63,6 @@ export default class ClientRepository extends TenantRepository {
     return await super.updateByIdAndCompany(clientId, companyId, updateData);
   }
 
-  /**
-   * Delete client for company
-   * @param {String} clientId - Client ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async deleteByIdAndCompany(clientId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -108,20 +70,10 @@ export default class ClientRepository extends TenantRepository {
     return await super.deleteByIdAndCompany(clientId, companyId);
   }
 
-  /**
-   * Find client by name (global - not company-specific)
-   * @param {String} name - Client name
-   * @returns {Promise<Object|null>}
-   */
   async findByName(name) {
     return await this.Model.findOne({ name });
   }
 
-  /**
-   * Find client by GST number (global - not company-specific)
-   * @param {String} gstNo - GST number
-   * @returns {Promise<Object|null>}
-   */
   async findByGST(gstNo) {
     return await this.Model.findOne({ gstNo });
   }

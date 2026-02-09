@@ -1,4 +1,3 @@
-// src/controllers/admin.controller.js
 import AdminService from '../services/admin.service.js';
 import { success } from '../utils/response.utils.js';
 

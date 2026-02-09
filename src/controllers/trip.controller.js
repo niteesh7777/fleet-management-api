@@ -9,7 +9,6 @@ export const createTrip = async (req, res, next) => {
   try {
     const trip = await service.createTrip(req.user.companyId, req.body);
 
-    // Audit logging
     const creatorId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'trip_creation',
@@ -29,10 +28,9 @@ export const createTrip = async (req, res, next) => {
 
 export const getAllTrips = async (req, res, next) => {
   try {
-    // Debug: Log received query parameters
+
     console.log('getAllTrips: Received query parameters:', req.query);
 
-    // optionally accept filters via query params (e.g., ?status=started&clientId=...)
     const filter = { ...req.query };
     console.log('getAllTrips: Processing filter:', filter);
 
@@ -51,27 +49,22 @@ export const getTripsPaginated = async (req, res, next) => {
     const { page, limit, skip } = req.pagination;
     const filter = {};
 
-    // Add search functionality
     if (req.query.search) {
       filter.$or = [{ tripCode: { $regex: req.query.search, $options: 'i' } }];
     }
 
-    // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
     }
 
-    // Add client filter
     if (req.query.clientId) {
       filter.clientId = req.query.clientId;
     }
 
-    // Add route filter
     if (req.query.routeId) {
       filter.routeId = req.query.routeId;
     }
 
-    // Add date range filter (startDate and endDate for trip creation/start time)
     if (req.query.startDate || req.query.endDate) {
       filter.startTime = {};
       if (req.query.startDate) {
@@ -80,7 +73,7 @@ export const getTripsPaginated = async (req, res, next) => {
       if (req.query.endDate) {
         filter.startTime.$lte = new Date(req.query.endDate);
       }
-      // If no startTime fields were added, delete the filter
+
       if (Object.keys(filter.startTime).length === 0) {
         delete filter.startTime;
       }
@@ -109,15 +102,13 @@ export const getTripById = async (req, res, next) => {
 
 export const updateTrip = async (req, res, next) => {
   try {
-    // Get the original trip data for audit logging
+
     const originalTrip = await service.getTripById(req.user.companyId, req.params.id);
 
     const trip = await service.updateTrip(req.user.companyId, req.params.id, req.body);
 
-    // Audit logging for specific actions
     const userId = req.user?.id || req.user?._id;
 
-    // Log driver assignment
     if (
       req.body.driverId &&
       (!originalTrip.driverId || originalTrip.driverId.toString() !== req.body.driverId)
@@ -128,7 +119,6 @@ export const updateTrip = async (req, res, next) => {
       });
     }
 
-    // Log trip completion
     if (req.body.status === 'completed' && originalTrip.status !== 'completed') {
       await AuditService.logTripCompletion(
         req.params.id,
@@ -151,12 +141,11 @@ export const updateTrip = async (req, res, next) => {
 
 export const deleteTrip = async (req, res, next) => {
   try {
-    // Get trip data before deletion for audit logging
+
     const tripToDelete = await service.getTripById(req.user.companyId, req.params.id);
 
     const trip = await service.deleteTrip(req.user.companyId, req.params.id);
 
-    // Audit logging
     const deleterId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'trip_deletion',
@@ -235,7 +224,6 @@ export const bulkDeleteTrips = async (req, res, next) => {
 
     const results = await service.bulkDeleteTrips(req.user.companyId, ids);
 
-    // Audit log for each successfully deleted trip
     const userId = req.user?.id || req.user?._id;
     for (const deleted of results.deleted) {
       await AuditService.log({

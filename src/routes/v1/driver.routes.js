@@ -25,7 +25,6 @@ import { COMPANY_ADMIN_ROLES, COMPANY_DRIVER_ROLES } from '../../constants/roleG
 
 const router = express.Router();
 
-// DRIVER MOBILE APP ENDPOINTS (authenticated driver only)
 router.get('/me', requireAuth(), requireRole(...COMPANY_DRIVER_ROLES), getMyProfile);
 router.put(
   '/:id/location',
@@ -35,7 +34,6 @@ router.put(
   updateDriverLocation
 );
 
-// ADMIN ENDPOINTS
 router.post(
   '/',
   requireAuth(),

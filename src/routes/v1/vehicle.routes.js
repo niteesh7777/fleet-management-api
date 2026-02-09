@@ -1,4 +1,3 @@
-// src/routes/vehicle.routes.js
 import express from 'express';
 import { validate } from '../../middlewares/validation.middleware.js';
 import {
@@ -27,7 +26,6 @@ import { pagination } from '../../middlewares/pagination.middleware.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
 router.use(requireAuth());
 
 router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createVehicleSchema), createVehicle);
@@ -41,7 +39,7 @@ router.get(
   getVehiclesPaginated
 );
 
-router.get('/:id', getVehicleById); // Drivers might need to see vehicle details
+router.get('/:id', getVehicleById);
 
 router.put(
   '/:id',

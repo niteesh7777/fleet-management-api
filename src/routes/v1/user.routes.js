@@ -15,7 +15,6 @@ import { OWNER_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
-// All routes require authentication and admin role
 router.use(requireAuth());
 router.use(requireRole(...OWNER_ADMIN_ROLES));
 

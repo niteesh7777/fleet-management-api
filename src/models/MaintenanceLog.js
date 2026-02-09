@@ -74,7 +74,7 @@ const maintenanceLogSchema = new mongoose.Schema(
 
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // Admin or fleet manager who recorded this
+      ref: 'User',
       required: true,
     },
 

@@ -9,7 +9,6 @@ export const createVehicle = async (req, res, next) => {
   try {
     const vehicle = await service.createVehicle(req.user.companyId, req.body);
 
-    // Audit logging
     const creatorId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'vehicle_creation',
@@ -41,7 +40,6 @@ export const getVehiclesPaginated = async (req, res, next) => {
     const { page, limit, skip } = req.pagination;
     const filter = {};
 
-    // Add search functionality
     if (req.query.search) {
       filter.$or = [
         { vehicleNo: { $regex: req.query.search, $options: 'i' } },
@@ -50,12 +48,10 @@ export const getVehiclesPaginated = async (req, res, next) => {
       ];
     }
 
-    // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
     }
 
-    // Add type filter
     if (req.query.type) {
       filter.type = req.query.type;
     }
@@ -83,12 +79,11 @@ export const getVehicleById = async (req, res, next) => {
 
 export const updateVehicle = async (req, res, next) => {
   try {
-    // Get the original vehicle data for audit logging
+
     const originalVehicle = await service.getVehicleById(req.user.companyId, req.params.id);
 
     const vehicle = await service.updateVehicle(req.user.companyId, req.params.id, req.body);
 
-    // Audit logging for status change
     const userId = req.user?.id || req.user?._id;
     if (req.body.status && originalVehicle.status !== req.body.status) {
       await AuditService.logVehicleStatusChange(
@@ -111,12 +106,11 @@ export const updateVehicle = async (req, res, next) => {
 
 export const deleteVehicle = async (req, res, next) => {
   try {
-    // Get vehicle data before deletion for audit logging
+
     const vehicleToDelete = await service.getVehicleById(req.user.companyId, req.params.id);
 
     const vehicle = await service.deleteVehicle(req.user.companyId, req.params.id);
 
-    // Audit logging
     const deleterId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'vehicle_deletion',
@@ -143,12 +137,10 @@ export const updateVehicleStatus = async (req, res, next) => {
   try {
     const { status } = req.body;
 
-    // Get the original vehicle data for audit logging
     const originalVehicle = await service.getVehicleById(req.user.companyId, req.params.id);
 
     const vehicle = await service.updateStatus(req.user.companyId, req.params.id, status);
 
-    // Audit logging for status change
     const userId = req.user?.id || req.user?._id;
     await AuditService.logVehicleStatusChange(
       req.params.id,
@@ -208,7 +200,6 @@ export const bulkDeleteVehicles = async (req, res, next) => {
 
     const results = await service.bulkDeleteVehicles(req.user.companyId, ids);
 
-    // Audit log for each successfully deleted vehicle
     const userId = req.user?.id || req.user?._id;
     for (const deleted of results.deleted) {
       await AuditService.log({

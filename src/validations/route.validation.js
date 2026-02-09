@@ -35,7 +35,7 @@ export const createRouteSchema = Joi.object({
     Joi.string().valid('Truck', 'Mini Truck', 'Trailer', 'Van', 'Other')
   ),
 
-  createdBy: Joi.string().optional(), // Optional - will be set by controller
+  createdBy: Joi.string().optional(),
   isActive: Joi.boolean().default(true),
 });
 

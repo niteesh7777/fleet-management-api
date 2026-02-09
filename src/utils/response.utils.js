@@ -4,13 +4,13 @@ const createResponse = (res, success, message, data = null, status = 200, error 
     message,
     statusCode: status
   };
-  
+
   if (success) {
     if (data !== null) response.data = data;
   } else {
     if (error) response.error = error;
   }
-  
+
   return res.status(status).json(response);
 };
 

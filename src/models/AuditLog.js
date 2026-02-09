@@ -61,7 +61,6 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
-// Indexes for efficient querying - all scoped by company
 auditLogSchema.index({ companyId: 1, action: 1, createdAt: -1 });
 auditLogSchema.index({ companyId: 1, entityType: 1, entityId: 1, createdAt: -1 });
 auditLogSchema.index({ companyId: 1, userId: 1, createdAt: -1 });

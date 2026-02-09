@@ -21,7 +21,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
     passwordHash: {
       type: String,
@@ -75,7 +75,7 @@ userSchema.methods.toJSON = function () {
 };
 
 userSchema.index({ refreshTokenJti: 1 });
-// Compound unique index: same email can exist across different companies
+
 userSchema.index({ companyId: 1, email: 1 }, { unique: true });
 userSchema.index({ companyId: 1, platformRole: 1 });
 

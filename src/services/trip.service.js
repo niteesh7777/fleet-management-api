@@ -1,4 +1,3 @@
-// src/services/trip.service.js
 import TripRepository from '../repositories/trip.repository.js';
 import AppError from '../utils/appError.js';
 import VehicleRepository from '../repositories/vehicle.repository.js';
@@ -9,17 +8,12 @@ const vehicleRepo = new VehicleRepository();
 const driverRepo = new DriverRepository();
 
 export default class TripService {
-  /**
-   * Create new trip - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {object} data - Trip data
-   */
+
   async createTrip(companyId, data) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
     }
 
-    // Prevent assigning vehicles that are already in trip
     if (data.vehicleIds?.length) {
       for (const vehicleId of data.vehicleIds) {
         const v = await vehicleRepo.findByIdAndCompany(vehicleId, companyId);
@@ -30,7 +24,6 @@ export default class TripService {
       }
     }
 
-    // Prevent assigning drivers already in trip
     if (data.driverIds?.length) {
       for (const driverId of data.driverIds) {
         const d = await driverRepo.findByIdAndCompany(driverId, companyId);
@@ -41,13 +34,10 @@ export default class TripService {
       }
     }
 
-    // Set default status
     data.status = data.status || 'scheduled';
 
-    // Save trip
     const trip = await tripRepo.create(companyId, data);
 
-    // Update vehicle & driver status to "in-trip"
     for (const vehicleId of data.vehicleIds || []) {
       await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
         status: 'in-trip',
@@ -65,33 +55,22 @@ export default class TripService {
     return trip;
   }
 
-  /**
-   * Get all trips for a company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {object} filter - Additional filters
-   */
   async getAllTrips(companyId, filter = {}) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
     }
 
-    // Debug: Log received filter
     console.log('TripService: Processing filter:', filter);
 
-    // Process and validate filter parameters
     const processedFilter = this.processFilterParameters(filter);
     console.log('TripService: Processed filter:', processedFilter);
 
     return await tripRepo.getAllByCompany(companyId, processedFilter);
   }
 
-  /**
-   * Process and validate filter parameters
-   */
   processFilterParameters(filter) {
     const processedFilter = { ...filter };
 
-    // Handle date range filters
     if (filter.startDate || filter.endDate) {
       processedFilter.startTime = {};
       if (filter.startDate) {
@@ -104,7 +83,6 @@ export default class TripService {
       delete processedFilter.endDate;
     }
 
-    // Handle specific date filters
     if (filter.date === 'today') {
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -125,26 +103,19 @@ export default class TripService {
       delete processedFilter.date;
     }
 
-    // Validate status values against allowed enum
     if (filter.status) {
       const allowedStatuses = ['scheduled', 'started', 'in-transit', 'completed', 'cancelled'];
       if (!allowedStatuses.includes(filter.status)) {
         console.warn(
           `Invalid status value: ${filter.status}. Expected one of: ${allowedStatuses.join(', ')}`
         );
-        // Don't throw error, just log warning and continue
+
       }
     }
 
     return processedFilter;
   }
 
-  /**
-   * Get paginated trips for a company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {object} filter - Additional filters
-   * @param {object} paginationOptions - Pagination options
-   */
   async getTripsPaginated(companyId, filter = {}, paginationOptions = {}) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -153,11 +124,6 @@ export default class TripService {
     return await tripRepo.getAllByCompanyPaginated(companyId, processedFilter, paginationOptions);
   }
 
-  /**
-   * Get single trip by ID - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} id - Trip ID
-   */
   async getTripById(companyId, id) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -167,12 +133,6 @@ export default class TripService {
     return trip;
   }
 
-  /**
-   * Update trip details - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} id - Trip ID
-   * @param {object} updateData - Update data
-   */
   async updateTrip(companyId, id, updateData) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -181,12 +141,10 @@ export default class TripService {
     const existingTrip = await tripRepo.getByIdAndCompany(id, companyId);
     if (!existingTrip) throw new AppError('Trip not found', 404);
 
-    // Handle vehicle reassignment
     if (updateData.vehicleIds) {
       const oldVehicleIds = existingTrip.vehicleIds.map((v) => v.toString());
       const newVehicleIds = updateData.vehicleIds;
 
-      // Release old vehicles no longer assigned
       const vehiclesToRelease = oldVehicleIds.filter((vId) => !newVehicleIds.includes(vId));
       for (const vehicleId of vehiclesToRelease) {
         await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
@@ -195,7 +153,6 @@ export default class TripService {
         });
       }
 
-      // Assign new vehicles
       const vehiclesToAssign = newVehicleIds.filter((vId) => !oldVehicleIds.includes(vId));
       for (const vehicleId of vehiclesToAssign) {
         const v = await vehicleRepo.findByIdAndCompany(vehicleId, companyId);
@@ -210,12 +167,10 @@ export default class TripService {
       }
     }
 
-    // Handle driver reassignment
     if (updateData.driverIds) {
       const oldDriverIds = existingTrip.driverIds.map((d) => d.toString());
       const newDriverIds = updateData.driverIds;
 
-      // Release old drivers no longer assigned
       const driversToRelease = oldDriverIds.filter((dId) => !newDriverIds.includes(dId));
       for (const driverId of driversToRelease) {
         await driverRepo.updateByIdAndCompany(driverId, companyId, {
@@ -224,7 +179,6 @@ export default class TripService {
         });
       }
 
-      // Assign new drivers
       const driversToAssign = newDriverIds.filter((dId) => !oldDriverIds.includes(dId));
       for (const driverId of driversToAssign) {
         const d = await driverRepo.findByIdAndCompany(driverId, companyId);
@@ -243,11 +197,6 @@ export default class TripService {
     return updated;
   }
 
-  /**
-   * Delete a trip - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} id - Trip ID
-   */
   async deleteTrip(companyId, id) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -256,7 +205,6 @@ export default class TripService {
     const trip = await tripRepo.getByIdAndCompany(id, companyId);
     if (!trip) throw new AppError('Trip not found', 404);
 
-    // Release vehicles and drivers before deletion
     for (const vehicleId of trip.vehicleIds || []) {
       await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
         status: 'available',
@@ -275,12 +223,6 @@ export default class TripService {
     return deleted;
   }
 
-  /**
-   * Add trip progress update - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} id - Trip ID
-   * @param {object} updateData - Update data
-   */
   async addProgressUpdate(companyId, id, updateData) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -293,11 +235,6 @@ export default class TripService {
     return trip;
   }
 
-  /**
-   * Mark trip completed - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} id - Trip ID
-   */
   async completeTrip(companyId, id) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -308,7 +245,6 @@ export default class TripService {
 
     await trip.markCompleted();
 
-    // Release vehicles and drivers
     for (const vehicleId of trip.vehicleIds || []) {
       await vehicleRepo.updateByIdAndCompany(vehicleId, companyId, {
         status: 'available',
@@ -326,11 +262,6 @@ export default class TripService {
     return trip;
   }
 
-  /**
-   * Get trips for driver - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   * @param {string} userId - User ID
-   */
   async getTripsForDriver(companyId, userId) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -342,31 +273,23 @@ export default class TripService {
     return await tripRepo.getAllByCompany(companyId, { driverIds: profile._id });
   }
 
-  /**
-   * Get available resources - scoped to company
-   * @param {string} companyId - Company ObjectId (from JWT)
-   */
   async getAvailableResources(companyId) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
     }
 
-    // Get available drivers (not on trip)
     const drivers = await driverRepo.getAllByCompany(companyId, {
       status: { $in: ['active', 'inactive'] },
     });
 
-    // Get available vehicles (not in trip)
     const vehicles = await vehicleRepo.getAllByCompany(companyId, {
       status: { $in: ['available', 'maintenance'] },
     });
 
-    // Get all routes - import RouteRepository
     const RouteRepository = (await import('../repositories/route.repository.js')).default;
     const routeRepo = new RouteRepository();
     const routes = await routeRepo.getAllByCompany(companyId, { isActive: true });
 
-    // Get all clients - import ClientRepository
     const ClientRepository = (await import('../repositories/client.repository.js')).default;
     const clientRepo = new ClientRepository();
     const clients = await clientRepo.getAllByCompany(companyId);
@@ -409,27 +332,19 @@ export default class TripService {
     };
   }
 
-  /**
-   * Get all trips
-   */
   async getAllTrips(filter = {}) {
-    // Debug: Log received filter
+
     console.log('TripService: Processing filter:', filter);
 
-    // Process and validate filter parameters
     const processedFilter = this.processFilterParameters(filter);
     console.log('TripService: Processed filter:', processedFilter);
 
     return await tripRepo.findAll(processedFilter);
   }
 
-  /**
-   * Process and validate filter parameters
-   */
   processFilterParameters(filter) {
     const processedFilter = { ...filter };
 
-    // Handle date range filters
     if (filter.startDate || filter.endDate) {
       processedFilter.startTime = {};
       if (filter.startDate) {
@@ -442,7 +357,6 @@ export default class TripService {
       delete processedFilter.endDate;
     }
 
-    // Handle specific date filters
     if (filter.date === 'today') {
       const today = new Date();
       const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -463,26 +377,19 @@ export default class TripService {
       delete processedFilter.date;
     }
 
-    // Validate status values against allowed enum
     if (filter.status) {
       const allowedStatuses = ['scheduled', 'started', 'in-transit', 'completed', 'cancelled'];
       if (!allowedStatuses.includes(filter.status)) {
         console.warn(
           `Invalid status value: ${filter.status}. Expected one of: ${allowedStatuses.join(', ')}`
         );
-        // Don't throw error, just log warning and continue
+
       }
     }
 
     return processedFilter;
   }
 
-  /**
-   * Check dependencies before deleting trip
-   * @param {string} companyId - Company ObjectId
-   * @param {string} tripId - Trip ID
-   * @returns {object} Dependency information
-   */
   async checkTripDependencies(companyId, tripId) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -508,12 +415,6 @@ export default class TripService {
     };
   }
 
-  /**
-   * Bulk delete trips with validation
-   * @param {string} companyId - Company ObjectId
-   * @param {string[]} ids - Array of trip IDs
-   * @returns {object} Deletion results
-   */
   async bulkDeleteTrips(companyId, ids) {
     if (!companyId) {
       throw new AppError('companyId is required', 400);
@@ -537,7 +438,6 @@ export default class TripService {
           continue;
         }
 
-        // Check dependencies
         const dependencies = await this.checkTripDependencies(companyId, id);
         if (!dependencies.canDelete) {
           results.failed.push({
@@ -548,7 +448,6 @@ export default class TripService {
           continue;
         }
 
-        // Delete trip (already releases vehicles/drivers in deleteTrip method)
         await this.deleteTrip(companyId, id);
         results.deleted.push({ id, tripCode: trip.tripCode });
       } catch (error) {

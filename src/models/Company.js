@@ -3,7 +3,7 @@ import { DEFAULT_PLAN, COMPANY_STATUS } from '../constants/plans.js';
 
 const companySchema = new mongoose.Schema(
   {
-    // Basic Information
+
     name: {
       type: String,
       required: true,
@@ -25,7 +25,6 @@ const companySchema = new mongoose.Schema(
       required: true,
     },
 
-    // Subscription & Plan Information
     plan: {
       type: String,
       enum: ['free', 'starter', 'professional', 'enterprise'],
@@ -37,11 +36,10 @@ const companySchema = new mongoose.Schema(
       default: COMPANY_STATUS.ACTIVE,
     },
 
-    // Subscription Metadata
     subscriptionId: {
       type: String,
       default: null,
-      // For future integration with payment providers (Stripe, etc.)
+
     },
     subscriptionStartDate: {
       type: Date,
@@ -50,19 +48,18 @@ const companySchema = new mongoose.Schema(
     subscriptionEndDate: {
       type: Date,
       default: null,
-      // For trial or limited-time plans
+
     },
     trialEndsAt: {
       type: Date,
       default: null,
-      // For free trial tracking
+
     },
     lastPlanChangeDate: {
       type: Date,
       default: () => new Date(),
     },
 
-    // Billing Information
     billingEmail: {
       type: String,
       trim: true,
@@ -75,7 +72,6 @@ const companySchema = new mongoose.Schema(
       default: 'monthly',
     },
 
-    // Usage Tracking
     resourceUsage: {
       vehiclesCreatedThisMonth: {
         type: Number,
@@ -99,7 +95,6 @@ const companySchema = new mongoose.Schema(
       },
     },
 
-    // Suspension Reason (when status is suspended)
     suspensionReason: {
       type: String,
       default: null,
@@ -114,8 +109,6 @@ const companySchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-// Note: slug already has unique index from schema definition
 companySchema.index({ ownerUserId: 1 });
 companySchema.index({ status: 1 });
 companySchema.index({ createdAt: -1 });

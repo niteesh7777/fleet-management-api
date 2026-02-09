@@ -26,8 +26,8 @@ export const getAuditLogsSchema = Joi.object({
     'route',
     'client'
   ),
-  entityId: Joi.string().regex(/^[0-9a-fA-F]{24}$/), // MongoDB ObjectId validation
-  userId: Joi.string().regex(/^[0-9a-fA-F]{24}$/), // MongoDB ObjectId validation
+  entityId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
+  userId: Joi.string().regex(/^[0-9a-fA-F]{24}$/),
   dateFrom: Joi.date().iso(),
   dateTo: Joi.date()
     .iso()

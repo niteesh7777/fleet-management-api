@@ -42,7 +42,6 @@ export const createUser = async (req, res, next) => {
   try {
     const { name, email, role = 'driver', password } = req.body;
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new AppError('User with this email already exists', 400);
@@ -52,14 +51,13 @@ export const createUser = async (req, res, next) => {
       name,
       email,
       role,
-      passwordHash: password, // Will be hashed by pre-save middleware
+      passwordHash: password,
     });
 
     await user.save();
 
     const userResponse = await User.findById(user._id).select('-passwordHash -refreshTokenJti');
 
-    // Audit logging
     const creatorId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'user_creation',
@@ -84,10 +82,8 @@ export const updateUser = async (req, res, next) => {
     const { name, email, role } = req.body;
     const userId = req.params.id;
 
-    // Get original user data for audit logging
     const originalUser = await User.findById(userId).select('-passwordHash -refreshTokenJti');
 
-    // Check if email is being changed and if it's already taken
     if (email) {
       const existingUser = await User.findOne({ email, _id: { $ne: userId } });
       if (existingUser) {
@@ -105,7 +101,6 @@ export const updateUser = async (req, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    // Audit logging
     const updaterId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'user_update',
@@ -128,7 +123,7 @@ export const updateUser = async (req, res, next) => {
 
 export const deleteUser = async (req, res, next) => {
   try {
-    // Get user data before deletion for audit logging
+
     const userToDelete = await User.findById(req.params.id).select(
       '-passwordHash -refreshTokenJti'
     );
@@ -138,7 +133,6 @@ export const deleteUser = async (req, res, next) => {
       throw new AppError('User not found', 404);
     }
 
-    // Audit logging
     const deleterId = req.user?.id || req.user?._id;
     await AuditService.log({
       action: 'user_deletion',

@@ -2,7 +2,6 @@ import Trip from '../models/Trip.js';
 import Vehicle from '../models/Vehicle.js';
 import DriverProfile from '../models/DriverProfile.js';
 import MaintenanceLog from '../models/MaintenanceLog.js';
-// import Client from '../models/Client.js';
 
 export default class AnalyticsRepository {
   async getTripStats() {

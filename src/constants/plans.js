@@ -1,8 +1,3 @@
-/**
- * Subscription Plan Configuration
- * Defines plan tiers, limits, and features for the SaaS platform
- */
-
 export const PLAN_TYPES = {
   FREE: 'free',
   STARTER: 'starter',
@@ -16,10 +11,6 @@ export const COMPANY_STATUS = {
   CANCELLED: 'cancelled',
 };
 
-/**
- * Plan Limits Configuration
- * Each plan defines resource limits and features
- */
 export const PLAN_LIMITS = {
   [PLAN_TYPES.FREE]: {
     name: 'Free Plan',
@@ -87,59 +78,28 @@ export const PLAN_LIMITS = {
   },
 };
 
-/**
- * Get plan limits for a given plan type
- * @param {string} planType - Plan type (free, starter, professional, enterprise)
- * @returns {object} Plan limits configuration
- */
 export const getPlanLimits = (planType) => {
   return PLAN_LIMITS[planType] || PLAN_LIMITS[PLAN_TYPES.FREE];
 };
 
-/**
- * Check if a plan has a specific feature
- * @param {string} planType - Plan type
- * @param {string} feature - Feature name
- * @returns {boolean} Whether the plan has the feature
- */
 export const hasFeature = (planType, feature) => {
   const limits = getPlanLimits(planType);
   return limits.features[feature] || false;
 };
 
-/**
- * Get all available plan types
- * @returns {array} Array of plan type strings
- */
 export const getAllPlanTypes = () => {
   return Object.values(PLAN_TYPES);
 };
 
-/**
- * Check if a plan type is valid
- * @param {string} planType - Plan type to validate
- * @returns {boolean} Whether the plan type is valid
- */
 export const isValidPlan = (planType) => {
   return getAllPlanTypes().includes(planType);
 };
 
-/**
- * Get plan display name
- * @param {string} planType - Plan type
- * @returns {string} Display name for the plan
- */
 export const getPlanName = (planType) => {
   const limits = getPlanLimits(planType);
   return limits.name;
 };
 
-/**
- * Default plan for new companies
- */
 export const DEFAULT_PLAN = PLAN_TYPES.FREE;
 
-/**
- * Default plan limits for new companies
- */
 export const DEFAULT_LIMITS = PLAN_LIMITS[DEFAULT_PLAN];

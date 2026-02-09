@@ -20,7 +20,6 @@ import { COMPANY_ADMIN_ROLES } from '../../constants/roleGroups.js';
 
 const router = express.Router();
 
-// Apply authentication to all routes
 router.use(requireAuth());
 
 router.post(

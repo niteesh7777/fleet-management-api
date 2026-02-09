@@ -6,12 +6,6 @@ export default class VehicleRepository extends TenantRepository {
     super(Vehicle);
   }
 
-  /**
-   * Find vehicle by registration number within a company
-   * @param {String} companyId - Company ObjectId
-   * @param {String} vehicleNo - Vehicle registration number
-   * @returns {Promise<Object|null>}
-   */
   async findByVehicleNoAndCompany(companyId, vehicleNo) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -19,12 +13,6 @@ export default class VehicleRepository extends TenantRepository {
     return await this.findOneByCompany(companyId, { vehicleNo });
   }
 
-  /**
-   * Get all vehicles for a company (with optional pagination)
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @returns {Promise<Array>}
-   */
   async getAllByCompany(companyId, filter = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -34,13 +22,6 @@ export default class VehicleRepository extends TenantRepository {
       .populate('currentTripId', 'tripCode status');
   }
 
-  /**
-   * Get paginated vehicles for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @param {Object} options - { skip, limit, sort }
-   * @returns {Promise<{docs: Array, total: Number}>}
-   */
   async getAllByCompanyPaginated(companyId, filter = {}, options = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -62,12 +43,6 @@ export default class VehicleRepository extends TenantRepository {
     return { vehicles, total };
   }
 
-  /**
-   * Get vehicle by ID with full population for a company
-   * @param {String} vehicleId - Vehicle ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async getByIdAndCompany(vehicleId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -78,12 +53,6 @@ export default class VehicleRepository extends TenantRepository {
       .populate('maintenanceLogs');
   }
 
-  /**
-   * Create vehicle for company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} data - Vehicle data
-   * @returns {Promise<Object>}
-   */
   async createForCompany(companyId, data) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -91,13 +60,6 @@ export default class VehicleRepository extends TenantRepository {
     return await this.create(companyId, data);
   }
 
-  /**
-   * Update vehicle for company
-   * @param {String} vehicleId - Vehicle ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} updateData - Fields to update
-   * @returns {Promise<Object|null>}
-   */
   async updateByIdAndCompany(vehicleId, companyId, updateData) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -105,12 +67,6 @@ export default class VehicleRepository extends TenantRepository {
     return await super.updateByIdAndCompany(vehicleId, companyId, updateData);
   }
 
-  /**
-   * Delete vehicle for company
-   * @param {String} vehicleId - Vehicle ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async deleteByIdAndCompany(vehicleId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -118,6 +74,4 @@ export default class VehicleRepository extends TenantRepository {
     return await super.deleteByIdAndCompany(vehicleId, companyId);
   }
 
-  // TODO: Implement legacy method compatibility if needed
-  // These methods should throw helpful errors directing to company-scoped versions
 }

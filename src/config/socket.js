@@ -2,22 +2,12 @@ import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { config } from './env.js';
 
-/**
- * Socket.IO Authentication Middleware
- *
- * Validates JWT from socket handshake cookies and extracts company context.
- * Critical security: companyId comes from JWT only, never from socket payload.
- *
- * @param {Socket} socket - Socket.IO socket instance
- * @param {Function} next - Middleware next callback
- */
 const socketAuthMiddleware = (socket, next) => {
   try {
-    // Extract token from cookies (web) or auth object (mobile fallback)
+
     const cookies = socket.handshake.headers.cookie;
     let token = null;
 
-    // Parse cookies to extract accessToken
     if (cookies) {
       const cookieArray = cookies.split(';');
       for (const cookie of cookieArray) {
@@ -29,7 +19,6 @@ const socketAuthMiddleware = (socket, next) => {
       }
     }
 
-    // Fallback to auth.token for mobile clients
     if (!token) {
       token = socket.handshake.auth.token;
     }
@@ -38,7 +27,6 @@ const socketAuthMiddleware = (socket, next) => {
       return next(new Error('Authentication token missing'));
     }
 
-    // Verify JWT token
     let payload;
     try {
       payload = jwt.verify(token, config.accessTokenSecret);
@@ -46,12 +34,10 @@ const socketAuthMiddleware = (socket, next) => {
       return next(new Error('Invalid or expired token'));
     }
 
-    // CRITICAL: Validate required tenant context in JWT
     if (!payload.companyId || !payload.id) {
       return next(new Error('Invalid token: missing required fields (companyId, userId)'));
     }
 
-    // Attach user data to socket - this is the ONLY source of truth for companyId
     socket.user = {
       id: payload.id,
       userId: payload.id,
@@ -61,7 +47,6 @@ const socketAuthMiddleware = (socket, next) => {
       companyRole: payload.companyRole,
     };
 
-    // Automatically join company room (company:<companyId>)
     const companyRoom = `company:${payload.companyId}`;
     socket.join(companyRoom);
 
@@ -75,12 +60,6 @@ const socketAuthMiddleware = (socket, next) => {
   }
 };
 
-/**
- * Initialize Socket.IO server
- *
- * @param {http.Server} httpServer - Express HTTP server instance
- * @returns {Server} Configured Socket.IO server
- */
 export const initializeSocket = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
@@ -88,34 +67,20 @@ export const initializeSocket = (httpServer) => {
       credentials: true,
       methods: ['GET', 'POST'],
     },
-    // Socket.IO configuration
+
     transports: ['websocket', 'polling'],
     pingInterval: 25000,
     pingTimeout: 60000,
   });
 
-  // Apply authentication middleware to all socket connections
   io.use(socketAuthMiddleware);
 
-  // Handle socket connections
   io.on('connection', (socket) => {
     console.log(`[Socket] Socket ${socket.id} connected for user ${socket.user.id}`);
 
-    /**
-     * Driver Location Update Event
-     *
-     * Event: driver:location:update
-     * Payload: { driverId, latitude, longitude, accuracy, timestamp }
-     *
-     * Rules:
-     * - Only broadcast to company room (company:<companyId>)
-     * - Verify driver belongs to socket user's company
-     * - Never trust driverId from payload alone (if sensitive operations needed)
-     * - Include company verification in broadcast
-     */
     socket.on('driver:location:update', async (data, callback) => {
       try {
-        // Validate payload
+
         if (!data || typeof data !== 'object') {
           const error = 'Invalid location update payload';
           console.warn(`[Socket] ${error}`);
@@ -124,24 +89,21 @@ export const initializeSocket = (httpServer) => {
 
         const { driverId, latitude, longitude, accuracy, timestamp } = data;
 
-        // Validate required fields
         if (!driverId || latitude === undefined || longitude === undefined) {
           const error = 'Missing required fields: driverId, latitude, longitude';
           console.warn(`[Socket] ${error}`);
           return callback?.({ success: false, error });
         }
 
-        // Validate coordinates
         if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
           const error = 'Invalid coordinates';
           console.warn(`[Socket] Invalid coordinates from user ${socket.user.id}`);
           return callback?.({ success: false, error });
         }
 
-        // Build location update message with company context
         const locationUpdate = {
           driverId,
-          companyId: socket.user.companyId, // From JWT, not payload
+          companyId: socket.user.companyId,
           latitude: parseFloat(latitude),
           longitude: parseFloat(longitude),
           accuracy: accuracy ? parseFloat(accuracy) : null,
@@ -149,7 +111,6 @@ export const initializeSocket = (httpServer) => {
           updatedAt: new Date().toISOString(),
         };
 
-        // Broadcast ONLY to company room
         const companyRoom = `company:${socket.user.companyId}`;
         io.to(companyRoom).emit('driver:location:updated', locationUpdate);
 
@@ -158,7 +119,6 @@ export const initializeSocket = (httpServer) => {
           `(driver: ${driverId}, lat: ${latitude}, lng: ${longitude})`
         );
 
-        // Acknowledge to sender
         callback?.({ success: true, message: 'Location update broadcast' });
       } catch (err) {
         console.error('[Socket] Error handling location update:', err.message);
@@ -166,11 +126,6 @@ export const initializeSocket = (httpServer) => {
       }
     });
 
-    /**
-     * Driver Connected Event
-     *
-     * Notifies company that a driver is now connected to live tracking
-     */
     socket.on('driver:connected', async (data, callback) => {
       try {
         const { driverId } = data || {};
@@ -179,7 +134,6 @@ export const initializeSocket = (httpServer) => {
           return callback?.({ success: false, error: 'driverId required' });
         }
 
-        // Broadcast to company room
         const companyRoom = `company:${socket.user.companyId}`;
         io.to(companyRoom).emit('driver:online', {
           driverId,
@@ -197,11 +151,6 @@ export const initializeSocket = (httpServer) => {
       }
     });
 
-    /**
-     * Driver Disconnected Event
-     *
-     * Notifies company that a driver went offline
-     */
     socket.on('driver:disconnected', async (data, callback) => {
       try {
         const { driverId } = data || {};
@@ -210,7 +159,6 @@ export const initializeSocket = (httpServer) => {
           return callback?.({ success: false, error: 'driverId required' });
         }
 
-        // Broadcast to company room
         const companyRoom = `company:${socket.user.companyId}`;
         io.to(companyRoom).emit('driver:offline', {
           driverId,
@@ -228,11 +176,6 @@ export const initializeSocket = (httpServer) => {
       }
     });
 
-    /**
-     * Vehicle Status Update Event
-     *
-     * Broadcast vehicle status (engine on/off, door lock, etc.)
-     */
     socket.on('vehicle:status:update', async (data, callback) => {
       try {
         const { vehicleId, status } = data || {};
@@ -241,7 +184,6 @@ export const initializeSocket = (httpServer) => {
           return callback?.({ success: false, error: 'vehicleId and status required' });
         }
 
-        // Broadcast to company room
         const companyRoom = `company:${socket.user.companyId}`;
         io.to(companyRoom).emit('vehicle:status:updated', {
           vehicleId,
@@ -259,20 +201,12 @@ export const initializeSocket = (httpServer) => {
       }
     });
 
-    /**
-     * Socket Disconnect Handler
-     *
-     * Cleanup when socket disconnects
-     */
     socket.on('disconnect', (reason) => {
       console.log(
         `[Socket] Socket ${socket.id} disconnected. User: ${socket.user?.id}, Reason: ${reason}`
       );
     });
 
-    /**
-     * Error Handler
-     */
     socket.on('error', (err) => {
       console.error(`[Socket] Socket ${socket.id} error:`, err);
     });

@@ -6,12 +6,6 @@ export default class RouteRepository extends TenantRepository {
     super(Route);
   }
 
-  /**
-   * Get all routes for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @returns {Promise<Array>}
-   */
   async getAllByCompany(companyId, filter = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -21,13 +15,6 @@ export default class RouteRepository extends TenantRepository {
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Get paginated routes for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @param {Object} options - { skip, limit, sort }
-   * @returns {Promise<{routes: Array, total: Number}>}
-   */
   async getAllByCompanyPaginated(companyId, filter = {}, options = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -48,12 +35,6 @@ export default class RouteRepository extends TenantRepository {
     return { routes, total };
   }
 
-  /**
-   * Find route by ID for a company
-   * @param {String} routeId - Route ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async getByIdAndCompany(routeId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -64,12 +45,6 @@ export default class RouteRepository extends TenantRepository {
     );
   }
 
-  /**
-   * Create route for company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} data - Route data
-   * @returns {Promise<Object>}
-   */
   async createForCompany(companyId, data) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -77,13 +52,6 @@ export default class RouteRepository extends TenantRepository {
     return await this.create(companyId, data);
   }
 
-  /**
-   * Update route for company
-   * @param {String} routeId - Route ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} updateData - Fields to update
-   * @returns {Promise<Object|null>}
-   */
   async updateByIdAndCompany(routeId, companyId, updateData) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -91,12 +59,6 @@ export default class RouteRepository extends TenantRepository {
     return await super.updateByIdAndCompany(routeId, companyId, updateData);
   }
 
-  /**
-   * Delete route for company
-   * @param {String} routeId - Route ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async deleteByIdAndCompany(routeId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');

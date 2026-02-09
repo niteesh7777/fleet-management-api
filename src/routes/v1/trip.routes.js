@@ -25,19 +25,14 @@ import { COMPANY_ADMIN_ROLES, COMPANY_DRIVER_ROLES } from '../../constants/roleG
 
 const router = express.Router();
 
-// Apply authentication to all routes
 router.use(requireAuth());
 
-// DRIVER ENDPOINTS - Must come before /:id routes
 router.get('/my', requireRole(...COMPANY_DRIVER_ROLES), getMyTrips);
 
-// Get available resources for trip creation (admin only)
 router.get('/available-resources', requireRole(...COMPANY_ADMIN_ROLES), getAvailableResources);
 
-// ADMIN ENDPOINTS
-router.post('/', validate(createTripSchema), createTrip); // Allow authenticated users to create trips
+router.post('/', validate(createTripSchema), createTrip);
 
-// Get all trips with pagination (supports filters: status, clientId, routeId, startDate, endDate, search)
 router.get(
   '/',
   requireRole(...COMPANY_ADMIN_ROLES),
@@ -45,7 +40,7 @@ router.get(
   getTripsPaginated
 );
 
-router.get('/:id', getTripById); // Drivers might need to see trip details
+router.get('/:id', getTripById);
 
 router.put('/:id', requireRole(...COMPANY_ADMIN_ROLES), validate(updateTripSchema), updateTrip);
 

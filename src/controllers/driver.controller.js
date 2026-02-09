@@ -1,4 +1,3 @@
-// src/controllers/driver.controller.js
 import DriverService from '../services/driver.service.js';
 import AdminService from '../services/admin.service.js';
 import { success } from '../utils/response.utils.js';
@@ -7,7 +6,6 @@ import { createPaginatedResponse } from '../middlewares/pagination.middleware.js
 const driverService = new DriverService();
 const adminService = new AdminService();
 
-// COMPOSITE: Create User + DriverProfile
 export const createDriverComposite = async (req, res, next) => {
   try {
     const result = await adminService.createDriverComposite(req.body);
@@ -17,7 +15,6 @@ export const createDriverComposite = async (req, res, next) => {
   }
 };
 
-// CRUD
 export const getAllDrivers = async (req, res, next) => {
   try {
     const drivers = await driverService.getAllDrivers(req.user.companyId);
@@ -32,7 +29,6 @@ export const getDriversPaginated = async (req, res, next) => {
     const { page, limit, skip } = req.pagination;
     const filter = {};
 
-    // Add search functionality
     if (req.query.search) {
       filter.$or = [
         { licenseNo: { $regex: req.query.search, $options: 'i' } },
@@ -40,7 +36,6 @@ export const getDriversPaginated = async (req, res, next) => {
       ];
     }
 
-    // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
     }
@@ -93,7 +88,6 @@ export const deactivateDriver = async (req, res, next) => {
   }
 };
 
-// DRIVER MOBILE APP ENDPOINTS
 export const updateDriverLocation = async (req, res, next) => {
   try {
     const { lat, lng } = req.body;
@@ -105,14 +99,12 @@ export const updateDriverLocation = async (req, res, next) => {
       companyId: req.user?.companyId,
     });
 
-    // Update location in database with companyId
     const driver = await driverService.updateLocation(req.user.companyId, req.params.id, {
       lat,
       lng,
     });
     console.log('[updateDriverLocation] Location updated successfully:', driver.currentLocation);
 
-    // Broadcast real-time update to company room via Socket.IO
     if (req.io) {
       const companyRoom = `company:${req.user.companyId}`;
       req.io.to(companyRoom).emit('driver:location:updated', {

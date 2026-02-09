@@ -1,4 +1,3 @@
-// src/controllers/client.controller.js
 import ClientService from '../services/client.service.js';
 import { success } from '../utils/response.utils.js';
 import { createPaginatedResponse } from '../middlewares/pagination.middleware.js';
@@ -28,7 +27,6 @@ export const getClientsPaginated = async (req, res, next) => {
     const { page, limit, skip } = req.pagination;
     const filter = {};
 
-    // Add search functionality
     if (req.query.search) {
       filter.$or = [
         { name: { $regex: req.query.search, $options: 'i' } },
@@ -37,7 +35,6 @@ export const getClientsPaginated = async (req, res, next) => {
       ];
     }
 
-    // Add status filter
     if (req.query.status) {
       filter.status = req.query.status;
     }

@@ -31,7 +31,7 @@ const clientSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
 
     type: {
@@ -76,7 +76,6 @@ clientSchema.virtual('trips', {
   foreignField: 'clientId',
 });
 
-// Compound unique index: name scoped by company
 clientSchema.index({ companyId: 1, name: 1 }, { unique: true });
 clientSchema.index({ companyId: 1, createdAt: -1 });
 clientSchema.index({ 'contact.phone': 1 });

@@ -1,4 +1,3 @@
-// src/controllers/analytics.controller.js
 import AnalyticsService from '../services/analytics.service.js';
 import { success } from '../utils/response.utils.js';
 

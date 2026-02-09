@@ -1,19 +1,5 @@
-/**
- * Structured Logging Middleware
- *
- * Provides JSON-based structured logging for production observability
- * - Logs all requests with timing and response status
- * - Includes companyId for multi-tenant tracing
- * - Logs errors with full context
- * - Supports log levels (info, warn, error)
- */
-
-// eslint-disable-next-line no-undef
 const { env } = process;
 
-/**
- * Parse log level from environment or default
- */
 const LOG_LEVEL = {
   ERROR: 0,
   WARN: 1,
@@ -23,9 +9,6 @@ const LOG_LEVEL = {
 
 const CURRENT_LOG_LEVEL = env?.LOG_LEVEL ? LOG_LEVEL[env.LOG_LEVEL] : LOG_LEVEL.INFO;
 
-/**
- * Structured log entry format
- */
 class StructuredLog {
   constructor(level, message, data = {}) {
     this.timestamp = new Date().toISOString();
@@ -48,9 +31,6 @@ class StructuredLog {
   }
 }
 
-/**
- * Global logger instance
- */
 class Logger {
   static error(message, data = {}) {
     if (CURRENT_LOG_LEVEL >= LOG_LEVEL.ERROR) {
@@ -81,24 +61,12 @@ class Logger {
   }
 }
 
-/**
- * Request/Response Logging Middleware
- *
- * Tracks:
- * - Request method, path, status
- * - Response time
- * - companyId (multi-tenant tracking)
- * - User ID (if authenticated)
- * - Error details (if applicable)
- */
 export const requestLogger = (req, res, next) => {
   const startTime = Date.now();
   const requestId = generateRequestId();
 
-  // Store request ID for error handlers
   req.requestId = requestId;
 
-  // Capture original response.end
   const originalEnd = res.end;
 
   res.end = function (...args) {
@@ -116,7 +84,6 @@ export const requestLogger = (req, res, next) => {
       ip: req.ip,
     };
 
-    // Log warnings for slow requests
     if (duration > 5000) {
       Logger.warn('Slow request detected', {
         ...logData,
@@ -124,32 +91,24 @@ export const requestLogger = (req, res, next) => {
       });
     }
 
-    // Log errors for failed requests
     if (statusCode >= 400) {
       Logger.error(`Request failed: ${req.method} ${req.path}`, {
         ...logData,
         responseSize: res.get('content-length') || 0,
       });
     } else {
-      // Log successful requests at info level
+
       Logger.info(`${req.method} ${req.path} - ${statusCode}`, {
         ...logData,
       });
     }
 
-    // Call original end
     originalEnd.apply(res, args);
   };
 
   next();
 };
 
-/**
- * Audit Log Helper
- *
- * Structured audit logging for compliance and security
- * Always includes companyId, userId, and action
- */
 export class AuditLogger {
   static log(action, entityType, entityId, userId, companyId, data = {}) {
     Logger.info(`Audit: ${action}`, {
@@ -195,11 +154,6 @@ export class AuditLogger {
   }
 }
 
-/**
- * Security Logger
- *
- * Logs security-relevant events for monitoring
- */
 export class SecurityLogger {
   static failedAuth(email, reason = '', ip = '') {
     Logger.warn('Authentication failed', {
@@ -257,11 +211,6 @@ export class SecurityLogger {
   }
 }
 
-/**
- * Error Logger
- *
- * Comprehensive error logging with context
- */
 export class ErrorLogger {
   static logError(error, context = {}) {
     Logger.error('Error occurred', {
@@ -295,9 +244,6 @@ export class ErrorLogger {
   }
 }
 
-/**
- * Generate unique request ID for tracing
- */
 function generateRequestId() {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }

@@ -5,7 +5,7 @@ const waypointSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     lat: { type: Number, required: true },
     lng: { type: Number, required: true },
-    stopDurationMin: { type: Number, default: 0 }, // optional rest time or stop
+    stopDurationMin: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -30,7 +30,7 @@ const routeSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
 
     source: {
@@ -85,7 +85,7 @@ const routeSchema = new mongoose.Schema(
 );
 
 routeSchema.index({ 'source.name': 1, 'destination.name': 1 });
-// Compound unique index: name scoped by company
+
 routeSchema.index({ companyId: 1, name: 1 }, { unique: true });
 routeSchema.index({ companyId: 1, createdAt: -1 });
 

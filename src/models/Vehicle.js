@@ -14,7 +14,7 @@ const vehicleSchema = new mongoose.Schema(
       uppercase: true,
       trim: true,
       match: [/^[A-Z0-9-]+$/, 'Invalid vehicle registration number format'],
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
 
     model: {
@@ -91,18 +91,15 @@ vehicleSchema.virtual('drivers', {
   foreignField: '_id',
 });
 
-// Compound unique index: vehicleNo scoped by company
 vehicleSchema.index({ companyId: 1, vehicleNo: 1 }, { unique: true });
 vehicleSchema.index({ companyId: 1, status: 1 });
 vehicleSchema.index({ companyId: 1, createdAt: -1 });
 
-// Check if insurance expired
 vehicleSchema.methods.isInsuranceExpired = function () {
   if (!this.insurance?.expiryDate) return false;
   return new Date() > new Date(this.insurance.expiryDate);
 };
 
-// Mark vehicle available
 vehicleSchema.methods.markAvailable = function () {
   this.status = 'available';
   this.currentTripId = null;

@@ -6,12 +6,6 @@ export default class TripRepository extends TenantRepository {
     super(Trip);
   }
 
-  /**
-   * Get all trips for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @returns {Promise<Array>}
-   */
   async getAllByCompany(companyId, filter = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -24,13 +18,6 @@ export default class TripRepository extends TenantRepository {
       .sort({ createdAt: -1 });
   }
 
-  /**
-   * Get paginated trips for a company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} filter - Additional filters
-   * @param {Object} options - { skip, limit, sort }
-   * @returns {Promise<{docs: Array, total: Number}>}
-   */
   async getAllByCompanyPaginated(companyId, filter = {}, options = {}) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -54,12 +41,6 @@ export default class TripRepository extends TenantRepository {
     return { trips, total };
   }
 
-  /**
-   * Get trip by ID for a company
-   * @param {String} tripId - Trip ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async getByIdAndCompany(tripId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -71,12 +52,6 @@ export default class TripRepository extends TenantRepository {
       .populate('driverIds', 'licenseNo status');
   }
 
-  /**
-   * Create trip for company
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} data - Trip data
-   * @returns {Promise<Object>}
-   */
   async createForCompany(companyId, data) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -84,13 +59,6 @@ export default class TripRepository extends TenantRepository {
     return await this.create(companyId, data);
   }
 
-  /**
-   * Update trip for company
-   * @param {String} tripId - Trip ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @param {Object} updateData - Fields to update
-   * @returns {Promise<Object|null>}
-   */
   async updateByIdAndCompany(tripId, companyId, updateData) {
     if (!companyId) {
       throw new Error('companyId is required');
@@ -98,12 +66,6 @@ export default class TripRepository extends TenantRepository {
     return await super.updateByIdAndCompany(tripId, companyId, updateData);
   }
 
-  /**
-   * Delete trip for company
-   * @param {String} tripId - Trip ObjectId
-   * @param {String} companyId - Company ObjectId
-   * @returns {Promise<Object|null>}
-   */
   async deleteByIdAndCompany(tripId, companyId) {
     if (!companyId) {
       throw new Error('companyId is required');

@@ -23,10 +23,6 @@ export const loginSchema = Joi.object({
   }),
 });
 
-/**
- * Platform signup schema for SaaS company onboarding
- * Creates new company and company owner user in one operation
- */
 export const platformSignupSchema = Joi.object({
   companyName: Joi.string().min(2).max(100).required().messages({
     'string.empty': 'Company name is required',

@@ -18,7 +18,6 @@ import { createClientSchema, updateClientSchema } from '../../validations/client
 
 const router = express.Router();
 
-// Apply authentication to all routes
 router.use(requireAuth());
 
 router.post('/', requireRole(...COMPANY_ADMIN_ROLES), validate(createClientSchema), createClient);

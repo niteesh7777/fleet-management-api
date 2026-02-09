@@ -30,7 +30,7 @@ const tripSchema = new mongoose.Schema(
       required: true,
       uppercase: true,
       trim: true,
-      // Note: Unique constraint removed - now scoped by companyId via compound index
+
     },
 
     routeId: {
@@ -127,21 +127,18 @@ tripSchema.virtual('client', {
   justOne: true,
 });
 
-// Compound unique index: tripCode scoped by company
 tripSchema.index({ companyId: 1, tripCode: 1 }, { unique: true });
 tripSchema.index({ companyId: 1, status: 1 });
 tripSchema.index({ companyId: 1, createdAt: -1 });
 tripSchema.index({ companyId: 1, clientId: 1 });
 tripSchema.index({ companyId: 1, routeId: 1 });
 
-// Add a progress update (with note/location)
 tripSchema.methods.addProgressUpdate = async function (updateData) {
   this.progressUpdates.push(updateData);
   await this.save();
   return this;
 };
 
-// Mark trip completed
 tripSchema.methods.markCompleted = async function () {
   this.status = 'completed';
   this.endTime = new Date();

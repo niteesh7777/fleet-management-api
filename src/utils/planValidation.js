@@ -1,16 +1,6 @@
-/**
- * Plan Validation Utility
- * Reusable functions for validating company subscription limits
- */
-
 import AppError from './appError.js';
 import { getPlanLimits, COMPANY_STATUS } from '../constants/plans.js';
 
-/**
- * Check if company is in a valid state for resource creation
- * @param {object} company - Company document
- * @throws {AppError} If company is suspended or cancelled
- */
 export const checkCompanyStatus = (company) => {
   if (!company) {
     throw new AppError('Company not found', 404);
@@ -31,12 +21,6 @@ export const checkCompanyStatus = (company) => {
   }
 };
 
-/**
- * Validate vehicles limit
- * @param {object} company - Company document
- * @param {number} currentCount - Current number of vehicles in company
- * @throws {AppError} If limit is exceeded
- */
 export const validateVehiclesLimit = (company, currentCount) => {
   checkCompanyStatus(company);
 
@@ -49,12 +33,6 @@ export const validateVehiclesLimit = (company, currentCount) => {
   }
 };
 
-/**
- * Validate drivers limit
- * @param {object} company - Company document
- * @param {number} currentCount - Current number of drivers in company
- * @throws {AppError} If limit is exceeded
- */
 export const validateDriversLimit = (company, currentCount) => {
   checkCompanyStatus(company);
 
@@ -67,12 +45,6 @@ export const validateDriversLimit = (company, currentCount) => {
   }
 };
 
-/**
- * Validate users limit
- * @param {object} company - Company document
- * @param {number} currentCount - Current number of users in company
- * @throws {AppError} If limit is exceeded
- */
 export const validateUsersLimit = (company, currentCount) => {
   checkCompanyStatus(company);
 
@@ -85,12 +57,6 @@ export const validateUsersLimit = (company, currentCount) => {
   }
 };
 
-/**
- * Validate clients limit
- * @param {object} company - Company document
- * @param {number} currentCount - Current number of clients in company
- * @throws {AppError} If limit is exceeded
- */
 export const validateClientsLimit = (company, currentCount) => {
   checkCompanyStatus(company);
 
@@ -103,13 +69,6 @@ export const validateClientsLimit = (company, currentCount) => {
   }
 };
 
-/**
- * Get remaining quota for a resource type
- * @param {object} company - Company document
- * @param {string} resourceType - Type of resource (vehicles, drivers, users, clients)
- * @param {number} currentCount - Current number of resources
- * @returns {number} Remaining quota
- */
 export const getRemainingQuota = (company, resourceType, currentCount) => {
   const limits = getPlanLimits(company.plan);
 
@@ -132,13 +91,6 @@ export const getRemainingQuota = (company, resourceType, currentCount) => {
   return Math.max(0, limit - currentCount);
 };
 
-/**
- * Get usage percentage for a resource type
- * @param {object} company - Company document
- * @param {string} resourceType - Type of resource
- * @param {number} currentCount - Current number of resources
- * @returns {number} Usage percentage (0-100)
- */
 export const getUsagePercentage = (company, resourceType, currentCount) => {
   const limits = getPlanLimits(company.plan);
 
@@ -155,18 +107,12 @@ export const getUsagePercentage = (company, resourceType, currentCount) => {
 
   const limit = limits[limitField];
   if (limit === Infinity) {
-    return 0; // No limit
+    return 0;
   }
 
   return Math.round((currentCount / limit) * 100);
 };
 
-/**
- * Check if a feature is available for the company's plan
- * @param {object} company - Company document
- * @param {string} feature - Feature name
- * @throws {AppError} If feature is not available
- */
 export const checkFeatureAvailability = (company, feature) => {
   const limits = getPlanLimits(company.plan);
   if (!limits.features[feature]) {
@@ -177,13 +123,6 @@ export const checkFeatureAvailability = (company, feature) => {
   }
 };
 
-/**
- * Get company usage summary for quota dashboard
- * @param {object} company - Company document
- * @param {object} counts - Object with current resource counts
- *   { vehicles: number, drivers: number, users: number, clients: number }
- * @returns {object} Usage summary with remaining quotas and percentages
- */
 export const getUsageSummary = (company, counts) => {
   const limits = getPlanLimits(company.plan);
 

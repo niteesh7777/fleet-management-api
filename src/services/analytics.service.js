@@ -1,4 +1,3 @@
-// src/services/analytics.service.js
 import AnalyticsRepository from '../repositories/analytics.repository.js';
 
 const repo = new AnalyticsRepository();
@@ -43,10 +42,6 @@ export default class AnalyticsService {
   }
 }
 
-/**
- * Aggregate daily usage statistics for all companies
- * Runs as a background job
- */
 export const aggregateDailyUsage = async () => {
   const Company = (await import('../models/Company.js')).default;
   const Trip = (await import('../models/Trip.js')).default;
@@ -67,26 +62,23 @@ export const aggregateDailyUsage = async () => {
 
   for (const company of companies) {
     try {
-      // Count trips completed yesterday
+
       const tripsCompleted = await Trip.countDocuments({
         companyId: company._id,
         status: 'completed',
         completedAt: { $gte: yesterday, $lt: today },
       });
 
-      // Count active vehicles
       const activeVehicles = await Vehicle.countDocuments({
         companyId: company._id,
         status: { $in: ['available', 'in-trip'] },
       });
 
-      // Count active drivers
       const activeDrivers = await DriverProfile.countDocuments({
         companyId: company._id,
         status: { $in: ['available', 'on-trip'] },
       });
 
-      // Calculate total distance (from completed trips)
       const tripStats = await Trip.aggregate([
         {
           $match: {
@@ -113,7 +105,6 @@ export const aggregateDailyUsage = async () => {
         totalRevenue: tripStats[0]?.totalCost || 0,
       };
 
-      // Store aggregated stats (could be saved to a separate DailyStats model)
       console.log(`  ✓ ${company.name}:`, dailyStats);
 
       processedCount++;

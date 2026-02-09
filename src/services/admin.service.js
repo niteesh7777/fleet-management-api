@@ -1,4 +1,3 @@
-// src/services/admin.service.js
 import AuthService from './auth.service.js';
 import DriverService from './driver.service.js';
 
@@ -9,7 +8,7 @@ export default class AdminService {
   }
 
   async createDriverComposite(data) {
-    // 1. Create User (role = driver)
+
     const user = await this.authService.register({
       name: data.name,
       email: data.email,
@@ -17,7 +16,6 @@ export default class AdminService {
       role: 'driver',
     });
 
-    // 2. Create DriverProfile
     const profile = await this.driverService.createDriver({
       userId: user.id,
       licenseNo: data.licenseNo,

@@ -1,14 +1,11 @@
 import jwt from 'jsonwebtoken';
 import AppError from '../utils/appError.js';
 import { config } from '../config/env.js';
-// import UserRepository from '../repositories/user.repository.js';
-
-// const repo = new UserRepository();
 
 export const requireAuth = () => {
   return async (req, res, next) => {
     try {
-      // Try cookie first (web clients), fallback to Authorization header (mobile clients)
+
       let token = req.cookies?.accessToken;
 
       if (!token) {
@@ -25,14 +22,13 @@ export const requireAuth = () => {
         return next(new AppError('Invalid or expired access token', 401));
       }
 
-      // CRITICAL: Validate tenant context exists in JWT
       if (!payload.companyId) {
         return next(new AppError('Invalid token: missing tenant context (companyId)', 401));
       }
 
       req.user = {
         id: payload.id,
-        userId: payload.id, // Alias for consistency
+        userId: payload.id,
         email: payload.email,
         companyId: payload.companyId,
         platformRole: payload.platformRole,
