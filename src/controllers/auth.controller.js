@@ -11,14 +11,14 @@ const ACCESS_COOKIE_NAME = 'accessToken';
 const refreshCookieOptions = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
-  sameSite: 'lax',
+  sameSite: config.nodeEnv === 'production' ? 'none' : 'lax',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
 const accessCookieOptions = {
   httpOnly: true,
   secure: config.nodeEnv === 'production',
-  sameSite: 'lax',
+  sameSite: config.nodeEnv === 'production' ? 'none' : 'lax',
   maxAge: 15 * 60 * 1000,
 };
 
@@ -70,8 +70,8 @@ export const login = async (req, res, next) => {
 
 export const refresh = async (req, res, next) => {
   try {
-
-    const token = req.cookies[REFRESH_COOKIE_NAME] || req.body.refreshToken;
+    const token =
+      (req.cookies && req.cookies[REFRESH_COOKIE_NAME]) || (req.body && req.body.refreshToken);
     if (!token) throw new AppError('No refresh token provided', 401);
 
     const { accessToken, refreshToken } = await service.refresh(token);
@@ -91,7 +91,7 @@ export const logout = async (req, res, next) => {
 
     const clearOptions = {
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: config.nodeEnv === 'production' ? 'none' : 'lax',
       secure: config.nodeEnv === 'production',
     };
     res.clearCookie(ACCESS_COOKIE_NAME, clearOptions);
