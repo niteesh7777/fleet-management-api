@@ -31,11 +31,11 @@ import Trip from '../src/models/Trip.js';
 import MaintenanceLog from '../src/models/MaintenanceLog.js';
 import AuditLog from '../src/models/AuditLog.js';
 import { PLAN_LIMITS } from '../src/constants/plans.js';
+import { dbName } from '../src/constants.js';
 
-// Database connection
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGO_URI, { dbName: dbName });
     console.log('✅ MongoDB connected successfully');
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error.message);

@@ -11,7 +11,8 @@ async function connectDB() {
   let attempt = 0;
   while (!connected && attempt <= MAX_RETRIES) {
     try {
-      await mongoose.connect(`${config.mongoURI}/${dbName}`, {
+      await mongoose.connect(config.mongoURI, {
+        dbName: dbName,
         autoIndex: false,
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
